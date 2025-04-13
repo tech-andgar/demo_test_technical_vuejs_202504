@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+import KivaLoanCard from '@/components/molecule/KivaLoanCard.vue';
+
 </script>
 
 <template>
-  <main>
-    <TheWelcome />
-  </main>
+    <div class="home-view">
+        <div class="home-view__header">
+            <h1>Kiva Loan Cards</h1>
+        </div>
+        
+    </div>
 </template>
