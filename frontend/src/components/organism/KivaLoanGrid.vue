@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watchEffect } from 'vue';
-import { KivaText, Spinner } from '../atoms';
+import { KivaText, KivaSpinner } from '../atoms';
 import FilterPanel from '../molecule/FilterPanel.vue';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
 import type { LoanFilters } from '@/models/filters';
@@ -161,7 +161,7 @@ const activeLoanCounts = computed(() => {
       <div class="kiva-loan-grid__cards">
         <!-- Loader -->
         <div v-if="isLoading" class="kiva-loan-grid__loading">
-          <Spinner size="lg" />
+          <KivaSpinner size="lg" />
         </div>
         
         <!-- Sin resultados -->

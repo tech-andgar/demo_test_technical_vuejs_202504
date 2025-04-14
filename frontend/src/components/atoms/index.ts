@@ -9,7 +9,7 @@ import KvLoadingSpinner from '@kiva/kv-components/dist/components/KvLoadingSpinn
 
 import KivaText from './KivaText.vue';
 import KivaBadge from './KivaBadge.vue';
-import Spinner from './Spinner.vue';
+import KivaSpinner from './KivaSpinner.vue';  
 
 // Importar desde molecule para mantener compatibilidad
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
@@ -22,5 +22,5 @@ export {
   KvLoadingSpinner as KivaLoadingSpinner,
   KivaText,
   KivaLoanCard,
-  Spinner
+  KivaSpinner
 };
