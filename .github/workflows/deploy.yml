@@ -16,7 +16,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+
+    - name: Setup Node with pnpm cache
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
+
+    - name: Cache test results
+      uses: actions/cache@v3
+      with:
+        path: |
+          frontend/coverage
+          frontend/node_modules/.vitest
+        key: ${{ runner.os }}-vitest-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
+        restore-keys: |
+          ${{ runner.os }}-vitest-
+
+    - name: Install Dependencies
+      working-directory: ./frontend
+      run: pnpm install
+
+    - name: Run Tests
+      working-directory: ./frontend
+      run: pnpm run test:unit
+
+    - name: Run Type Check
+      working-directory: ./frontend
+      run: pnpm run type-check
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
