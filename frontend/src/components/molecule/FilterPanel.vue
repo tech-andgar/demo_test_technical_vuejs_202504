@@ -49,81 +49,50 @@ const selectedSectors = ref<number[]>([]);
 const selectedCountries = ref<string[]>([]);
 
 // Inicializar selecciones basadas en los filtros iniciales
-if (props.filters?.sector) {
-  if (typeof props.filters.sector === 'number') {
-    selectedSectors.value = [props.filters.sector];
-  } else if (Array.isArray(props.filters.sector)) {
-    selectedSectors.value = [...props.filters.sector];
-  }
+if (props.filters?.sectors) {
+  selectedSectors.value = [...props.filters.sectors];
 }
 
-if (props.filters?.country) {
-  if (typeof props.filters.country === 'string') {
-    selectedCountries.value = [props.filters.country];
-  } else if (Array.isArray(props.filters.country)) {
-    selectedCountries.value = [...props.filters.country];
-  }
+if (props.filters?.countries) {
+  selectedCountries.value = [...props.filters.countries];
 }
 
 // Actualiza el filtro de sectores
-const updateSectorFilters = (sectors: number[]) => {
-  console.log('Actualizando filtros con sectores IDs:', sectors);
-  
-  // Si no hay sectores seleccionados, establecer sector como undefined
-  // Si hay un solo sector, establecer como número
-  // Si hay múltiples sectores, establecer como array
-  const sectorValue = sectors.length === 0 
-    ? undefined 
-    : sectors.length === 1 
-      ? sectors[0] 
-      : sectors;
-  
-  currentFilters.value = {
-    ...currentFilters.value,
-    sector: sectorValue
-  };
-  
-  emit('update:filters', currentFilters.value);
-  emit('filter', currentFilters.value);
+const updateSectorFilters = () => {
+  console.log('Actualizando filtros de sectores:', selectedSectors.value);
+  const newFilters = { ...currentFilters.value };
+  if (selectedSectors.value.length > 0) {
+    newFilters.sectors = selectedSectors.value;
+  } else {
+    delete newFilters.sectors;
+  }
+  currentFilters.value = newFilters;
+  emit('update:filters', newFilters);
+  emit('filter', newFilters);
 };
 
 // Actualiza el filtro de países
-const updateCountryFilters = (countries: string[]) => {
-  console.log('Actualizando filtros con países:', countries);
-  
-  // Si no hay países seleccionados, establecer country como undefined
-  // Si hay un solo país, establecer como string
-  // Si hay múltiples países, establecer como array
-  const countryValue = countries.length === 0 
-    ? undefined 
-    : countries.length === 1 
-      ? countries[0] 
-      : countries;
-  
-  currentFilters.value = {
-    ...currentFilters.value,
-    country: countryValue
-  };
-  
-  emit('update:filters', currentFilters.value);
-  emit('filter', currentFilters.value);
+const updateCountryFilters = () => {
+  console.log('Actualizando filtros de países:', selectedCountries.value);
+  const newFilters = { ...currentFilters.value };
+  if (selectedCountries.value.length > 0) {
+    newFilters.countries = selectedCountries.value;
+  } else {
+    delete newFilters.countries;
+  }
+  currentFilters.value = newFilters;
+  emit('update:filters', newFilters);
+  emit('filter', newFilters);
 };
 
 // Limpia todos los filtros
 const clearAllFilters = () => {
-  // Vaciar el array de sectores seleccionados primero
+  console.log('Limpiando todos los filtros');
   selectedSectors.value = [];
   selectedCountries.value = [];
-  
-  // Crear un nuevo objeto vacío para los filtros
   currentFilters.value = {};
-  
-  // Emitir los eventos con los valores actualizados
   emit('update:filters', {});
   emit('filter', {});
-  
-  // Log para verificar que se está ejecutando la función
-  console.log('Todos los filtros han sido limpiados');
 };
 
 // Alterna la visibilidad del panel de filtros en móvil

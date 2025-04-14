@@ -51,7 +51,8 @@ const {
   availableSectors,
   loadingFilters,
   loadingLoans,
-  availableCountries 
+  availableCountries,
+  updateFilters
 } = useLoan();
 
 // Cargar datos al montar el componente
@@ -62,7 +63,7 @@ onMounted(async () => {
   await loadFilterOptions();
   
   // Cargar préstamos
-  await loadLoans(1, filters.value);
+  await loadLoans(1);
   
   isLoading.value = false;
 });
@@ -74,15 +75,15 @@ watchEffect(async () => {
   isLoading.value = true;
   currentPage.value = 1; // Resetear a la primera página
   
-  await loadLoans(1, filters.value);
+  // Actualizar los filtros en el composable
+  await updateFilters(filters.value);
   
   isLoading.value = false;
 });
 
 // Computar índices de préstamos para la página actual
 const paginatedLoans = computed(() => {
-  const start = (currentPage.value - 1) * props.perPage;
-  return loans.value.slice(start, start + props.perPage);
+  return loans.value;
 });
 
 // Computar número total de páginas
@@ -97,9 +98,7 @@ const changePage = async (newPage: number) => {
   isLoading.value = true;
   currentPage.value = newPage;
   
-  const offset = (newPage - 1) * props.perPage;
-  
-  await loadLoans(offset + 1, filters.value);
+  await loadLoans(newPage);
   
   isLoading.value = false;
 };
@@ -117,8 +116,8 @@ const applyFilters = async (newFilters: LoanFilters) => {
   // Resetear a la primera página cuando cambian los filtros
   currentPage.value = 1;
   
-  // Recargar préstamos con los nuevos filtros (o sin filtros si se limpiaron)
-  await loadLoans(1, filters.value);
+  // Actualizar los filtros en el composable
+  await updateFilters(filters.value);
   
   // Finalizar loading state
   isLoading.value = false;

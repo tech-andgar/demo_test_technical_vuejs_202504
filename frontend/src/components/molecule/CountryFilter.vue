@@ -24,6 +24,13 @@ interface Props {
   activeLoanCounts?: Record<string, number>;
 }
 
+interface Country {
+  name: string;
+  isoCode?: string;
+  region?: string;
+  count?: number;
+}
+
 const props = withDefaults(defineProps<Props>(), {
   showCount: true,
   selectedCountries: () => [],
@@ -64,30 +71,29 @@ onMounted(async () => {
   }
 });
 
-// Gestiona la selección/deselección de un país
-const toggleCountry = (countryName: string) => {
-  if (selectedOptions.value.includes(countryName)) {
-    selectedOptions.value = selectedOptions.value.filter(c => c !== countryName);
+// Toggle country selection
+const toggleCountry = (country: Country) => {
+  console.log('Toggle country:', country);
+  const index = selectedOptions.value.indexOf(country.isoCode || '');
+  if (index === -1) {
+    selectedOptions.value.push(country.isoCode || '');
   } else {
-    selectedOptions.value.push(countryName);
+    selectedOptions.value.splice(index, 1);
   }
-  
+  console.log('Selected countries:', selectedOptions.value);
+  applyFilters();
+};
+
+// Apply filters
+const applyFilters = () => {
+  console.log('Applying country filters:', selectedOptions.value);
   emit('update:selectedCountries', selectedOptions.value);
+  emit('filter', selectedOptions.value);
 };
 
-// Aplica el filtro actual
-const applyFilter = () => {
-  // Convierte nombres de países a códigos ISO para la API
-  const countryIsoCodes = selectedOptions.value
-    .map(name => getIsoCode(name))
-    .filter((code): code is string => code !== undefined);
-  
-  emit('filter', countryIsoCodes);
-  isOpen.value = false;
-};
-
-// Limpia todos los filtros
-const clearFilter = () => {
+// Clear filters
+const clearFilters = () => {
+  console.log('Clearing country filters');
   selectedOptions.value = [];
   emit('update:selectedCountries', []);
   emit('filter', []);
@@ -131,7 +137,7 @@ const isSelected = (countryName: string): boolean => {
         <div 
           v-for="country in availableCountries" 
           :key="country.name"
-          @click="toggleCountry(country.name)"
+          @click="toggleCountry(country)"
           class="country-item"
           :class="{ 'selected': isSelected(country.name) }"
         >
@@ -146,8 +152,8 @@ const isSelected = (countryName: string): boolean => {
       </div>
       
       <div class="filter-actions">
-        <button class="btn-clear" @click="clearFilter">Clear</button>
-        <button class="btn-apply" @click="applyFilter">Apply</button>
+        <button class="btn-clear" @click="clearFilters">Clear</button>
+        <button class="btn-apply" @click="applyFilters">Apply</button>
       </div>
     </div>
   </div>

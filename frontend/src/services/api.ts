@@ -1,4 +1,4 @@
-import type { Loan } from '@/models/Loan';
+import { Loan } from '../models/Loan';
 import type { LoanFilters } from '@/models/filters';
 import { generateFilterVariables } from '@/models/filters';
 import { fetchGraphQL } from './graphqlClient';
@@ -20,26 +20,65 @@ import type { KivaGraphQLResponse, FilterOptionsResponse, GraphQLLoan } from './
  * @returns Object containing an array of normalized loan objects and the total count
  */
 export const fetchLoans = async (
-  limit: number = 12,
-  offset: number = 0,
+  limit: number,
+  offset: number,
   filters?: LoanFilters
-): Promise<{ loans: Loan[]; totalCount: number }> => {
+): Promise<{ loans: Loan[], total: number }> => {
   try {
+    // Convertir los filtros a la estructura esperada por la API
     const filterVariables = generateFilterVariables(filters);
-    const variables = { limit, offset, ...filterVariables };
+    
+    const query = `
+      query GetLoans($limit: Int!, $offset: Int!, $countries: [String!], $sectors: [Int!]) {
+        lend {
+          loans(limit: $limit, offset: $offset, filters: { country: $countries, sector: $sectors }) {
+            values {
+              id
+              name
+              description
+              loanAmount
+              loanFundraisingInfo {
+                fundedAmount
+              }
+              sector {
+                name
+                id
+              }
+              geocode {
+                country {
+                  name
+                  isoCode
+                }
+              }
+              image {
+                url
+              }
+            }
+            totalCount
+          }
+        }
+      }
+    `;
 
-    const data = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_QUERY, variables);
+    const variables = {
+      limit,
+      offset,
+      ...filterVariables
+    };
 
-    if (!data?.lend?.loans?.values) {
-      throw new DataFormatError('Invalid response format from API', data);
+    const response = await fetchGraphQL<KivaGraphQLResponse>(query, variables);
+    
+    if (!response?.lend?.loans?.values) {
+      throw new Error('Invalid response format from API');
     }
 
-    const loans = data.lend.loans.values.map(normalizeLoan);
-    const totalCount = data.lend.loans.totalCount || 0;
+    const loans = response.lend.loans.values.map(loan => new Loan(loan));
+    const total = response.lend.loans.totalCount || 0;
 
-    return { loans, totalCount };
+    return { loans, total };
   } catch (error) {
-    return handleApiError(error, 'fetchLoans');
+    console.error('Error fetching loans:', error);
+    throw error;
   }
 };
 

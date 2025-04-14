@@ -3,8 +3,8 @@
  */
 export interface LoanFilters {
   searchTerm?: string;
-  sector?: number | number[];
-  country?: string | string[];
+  sectors?: number[];
+  countries?: string[];
   sortBy?: string;
   gender?: string;         // 'female', 'male', 'nonbinary', etc.
   status?: string;         // 'fundraising', 'funded', etc.
@@ -34,24 +34,12 @@ export const generateFilterVariables = (filters?: LoanFilters) => {
   
   const variables: Record<string, any> = {};
   
-  if (filters.sector !== undefined && filters.sector !== null) {
-    // Implementar soporte para múltiples sectores
-    if (typeof filters.sector === 'number') {
-      // Si es un solo número, convertirlo en array
-      variables.sectors = [filters.sector];
-    } else if (Array.isArray(filters.sector) && filters.sector.length > 0) {
-      // Si ya es un array, usarlo directamente
-      variables.sectors = filters.sector;
-    }
+  if (filters.sectors !== undefined && filters.sectors !== null && filters.sectors.length > 0) {
+    variables.sectors = filters.sectors;
   }
   
-  if (filters.country) {
-    // Convertir el filtro de país a un array de códigos ISO
-    if (typeof filters.country === 'string') {
-      variables.countries = [filters.country];
-    } else if (Array.isArray(filters.country) && filters.country.length > 0) {
-      variables.countries = filters.country;
-    }
+  if (filters.countries !== undefined && filters.countries !== null && filters.countries.length > 0) {
+    variables.countries = filters.countries;
   }
   
   if (filters.gender) {

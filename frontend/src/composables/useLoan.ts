@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   fetchLoans,
@@ -153,26 +153,21 @@ export const useLoan = () => {
    * Loads a specific page of loans into the loans ref
    *
    * @param page - Page number to load (starting from 1)
-   * @param newFilters - Optional new filters to apply
    */
-  const loadLoans = async (page: number = 1, newFilters?: LoanFilters) => {
+  const loadLoans = async (page: number) => {
     try {
-      resetError();
-
-      // Apply new filters if provided
-      if (newFilters) {
-        filters.value = { ...newFilters };
-        // Reset to page 1 when filters change
-        page = 1;
-      }
-
-      currentPage.value = page;
+      loadingLoans.value = true;
+      error.value = null;
       const offset = (page - 1) * perPage.value;
       const fetchedLoans = await getLoans(perPage.value, offset, filters.value);
       loans.value = fetchedLoans;
+      totalCount.value = fetchedLoans.length;
+      currentPage.value = page;
     } catch (err) {
-      handleError(err);
-      loans.value = [];
+      error.value = err instanceof Error ? err.message : 'Error al cargar los préstamos';
+      console.error('Error loading loans:', err);
+    } finally {
+      loadingLoans.value = false;
     }
   };
 
@@ -182,6 +177,7 @@ export const useLoan = () => {
    * @param newFilters - Filters to apply
    */
   const updateFilters = async (newFilters: LoanFilters) => {
+    console.log('Actualizando filtros en useLoan:', newFilters);
     filters.value = { ...newFilters };
     return loadLoans(1); // Reset to page 1 with new filters
   };
@@ -231,6 +227,13 @@ export const useLoan = () => {
 
   // Initialize filter options when the composable is first used
   loadFilterOptions();
+
+  // Observar cambios en los filtros
+  watch(filters, () => {
+    console.log('Filtros cambiados en useLoan:', filters.value);
+    currentPage.value = 1; // Reset a la primera página cuando cambian los filtros
+    loadLoans(1);
+  }, { deep: true });
 
   return {
     // Data
