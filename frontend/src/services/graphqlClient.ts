@@ -37,7 +37,7 @@ export async function fetchGraphQL(query: string, variables: Record<string, any>
 
     if (result.errors && result.errors.length) {
       const errorMessages = result.errors.map((e: any) => e.message).join(', ');
-      throw new APIError('GraphQL errors', undefined, {
+      throw new APIError(`GraphQL errors: ${errorMessages}`, undefined, {
         errors: result.errors,
         query,
         variables,

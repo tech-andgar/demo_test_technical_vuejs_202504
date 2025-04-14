@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLoan } from '../useLoan';
-import { fetchLoans, fetchLoanById } from '@/services/api';
+import { fetchLoans, fetchLoanById, NetworkError } from '@/services/api';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
   fetchLoanById: vi.fn(),
+  NetworkError: class NetworkError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'NetworkError';
+    }
+  }
 }));
 
 vi.mock('vue-router', () => ({
@@ -82,15 +88,19 @@ describe('useLoan', () => {
 
   it('should handle errors when loading loans', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const error = new Error('Network error');
+    const error = new NetworkError('Network error');
 
     vi.mocked(fetchLoans).mockRejectedValue(error);
 
-    const { loadLoans, loadingLoans } = useLoan();
+    const { loadLoans, loadingLoans, error: errorState, errorMessage } = useLoan();
 
-    await expect(loadLoans()).rejects.toThrow('Network error');
+    await loadLoans();
+    
+    // Verify error handling
     expect(loadingLoans.value).toBe(false);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(error);
+    expect(errorState.value).not.toBeNull();
+    expect(errorMessage.value).toContain('connect to the server');
+    expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();
   });

@@ -47,6 +47,7 @@ describe('GraphQL Client', () => {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
+      text: async () => 'Server error',
     };
     mockFetch.mockResolvedValue(mockResponse);
 
