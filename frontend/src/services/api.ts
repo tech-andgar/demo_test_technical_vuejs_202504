@@ -1,91 +1,75 @@
-import { gql } from '@apollo/client';
-import { apolloClient } from '@/apollo';
-import { GET_LOANS, GET_LOAN_BY_ID } from '@/apollo/queries';
+import type { Loan } from './interfaces';
+import { fetchGraphQL } from './graphqlClient';
+import { normalizeLoan } from './mapper/loan';
 
+export const fetchLoans = async (limit: number = 12, offset: number = 0): Promise<{ loans: Loan[], totalCount: number }> => {
+  const query = `
+    query GetLoans($limit: Int!, $offset: Int!) {
+      lend {
+        loans(limit: $limit, offset: $offset) {
+          totalCount
+          values {
+            id
+            name
+            loanAmount
+            loanFundraisingInfo {
+              fundedAmount
+            }
+            image {
+              url(customSize: "w480h300")
+            }
+            whySpecial
+            geocode {
+              country {
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
 
-export interface GraphQLLoan {
-  id: number;
-  name: string;
-  loanAmount: number | string;
-  loanFundraisingInfo: {
-    fundedAmount: number | string;
-  };
-  image: {
-    url: string;
-  };
-  whySpecial: string;
-  description?: string;
-  status?: string;
-  borrowers?: Array<{
-    firstName: string;
-    pictured: boolean;
-    gender?: string;
-    isPrimary?: boolean;
-  }>;
-  geocode?: {
-    country: {
-      name: string;
-    };
-  };
-}
+  const data = await fetchGraphQL(query, { limit, offset });
 
-export interface Loan {
-  id: number;
-  name: string;
-  loanAmount: number;
-  loanFundraisingInfo: {
-    fundedAmount: number;
-  };
-  image: {
-    url: string;
-  };
-  whySpecial: string;
-  description?: string;
-  status?: string;
-  borrowers?: Array<{
-    firstName: string;
-    pictured: boolean;
-    gender?: string;
-    isPrimary?: boolean;
-  }>;
-  geocode?: {
-    country: {
-      name: string;
-    };
-  };
-}
+  const loans = data.lend.loans.values.map(normalizeLoan);
+  const totalCount = data.lend.loans.totalCount;
 
-
-const normalizeLoan = (loan: GraphQLLoan): Loan => {
-  if (!loan) throw new Error('Cannot normalize null or undefined loan');
-
-  return {
-    ...loan,
-    loanAmount: Number(loan.loanAmount),
-    loanFundraisingInfo: {
-      fundedAmount: Number(loan.loanFundraisingInfo.fundedAmount),
-    },
-  };
+  return { loans, totalCount };
 };
-
-export const fetchLoans = async (limit: number = 12 , offset: number = 0): Promise<{ loans: Loan[], totalCount: number }> => {
-    const { data } = await apolloClient.query({
-        query: GET_LOANS,
-        variables: { limit, offset },
-    });
-
-    const loans = data.lend.loans.values.map(normalizeLoan);
-    const totalCount = data.lend.loans.totalCount;
-
-    return { loans, totalCount };
-};
-
 
 export const fetchLoanById = async (id: number): Promise<Loan> => {
-    const { data } = await apolloClient.query({
-        query: GET_LOAN_BY_ID,
-        variables: { id },
-    });
+  const query = `
+    query GetLoanById($id: Int!) {
+      lend {
+        loan(id: $id) {
+          id
+          name
+          loanAmount
+          loanFundraisingInfo {
+            fundedAmount
+          }
+          image {
+            url(customSize: "w480h300")
+          }
+          whySpecial
+          description
+          status
+          borrowers {
+            firstName
+            pictured
+          }
+          geocode {
+            country {
+              name
+            }
+          }
+        }
+      }
+    }
+  `;
 
-    return normalizeLoan(data.lend.loan);
+  const data = await fetchGraphQL(query, { id });
+
+  return normalizeLoan(data.lend.loan);
 };
