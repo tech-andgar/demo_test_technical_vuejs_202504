@@ -41,14 +41,14 @@ export interface LoanListResponse {
  * Simplified to handle basic country data
  */
 export interface FilterOptionsResponse {
-  countries: Array<{ 
-    name: string; 
+  countries: Array<{
+    name: string;
     region?: string;
     isoCode?: string;
     count?: number;
   }>;
-  sectors: Array<{ 
-    name: string; 
+  sectors: Array<{
+    name: string;
     id?: number;
   }>;
 }

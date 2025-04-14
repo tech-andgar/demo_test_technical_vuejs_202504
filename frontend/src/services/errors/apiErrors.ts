@@ -5,7 +5,7 @@ export class APIError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'APIError';
@@ -31,7 +31,7 @@ export class NetworkError extends APIError {
 export class DataFormatError extends APIError {
   constructor(
     message: string,
-    public data?: any
+    public data?: unknown
   ) {
     super(message);
     this.name = 'DataFormatError';

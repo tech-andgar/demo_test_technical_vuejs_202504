@@ -6,16 +6,16 @@ export interface LoanFilters {
   sectors?: number[];
   countries?: string[];
   sortBy?: string;
-  gender?: string;         // 'female', 'male', 'nonbinary', etc.
-  status?: string;         // 'fundraising', 'funded', etc.
-  minAmount?: number;      // Minimum loan amount
-  maxAmount?: number;      // Maximum loan amount
-  themes?: string[];        // e.g. Green, Health, etc.
-  tags?: string[];          // Tags added by lenders
+  gender?: string; // 'female', 'male', 'nonbinary', etc.
+  status?: string; // 'fundraising', 'funded', etc.
+  minAmount?: number; // Minimum loan amount
+  maxAmount?: number; // Maximum loan amount
+  themes?: string[]; // e.g. Green, Health, etc.
+  tags?: string[]; // Tags added by lenders
   distributionModel?: string; // 'field_partner' or 'direct'
   isExpiringSoon?: boolean; // Whether loan is expiring soon
-  activities?: string[];    // More specific categories than sectors
-  loanLimit?: number;       // Maximum number of loans to retrieve (used with offset)
+  activities?: string[]; // More specific categories than sectors
+  loanLimit?: number; // Maximum number of loans to retrieve (used with offset)
 }
 
 export interface FilterOption {
@@ -25,43 +25,49 @@ export interface FilterOption {
 
 /**
  * Generate GraphQL filter variables based on filter parameters
- * 
+ *
  * @param filters - Object containing filter options
  * @returns Object of variables to pass to GraphQL query
  */
-export const generateFilterVariables = (filters?: LoanFilters) => {
+export function generateFilterVariables(filters?: LoanFilters): Record<string, unknown> {
+  console.log('Generated filter variables:', filters);
+
   if (!filters) return {};
-  
-  const variables: Record<string, any> = {};
-  
+
+  const variables: Record<string, unknown> = {};
+
   if (filters.sectors !== undefined && filters.sectors !== null && filters.sectors.length > 0) {
-    variables.sectors = filters.sectors;
+    variables.sectorIds = filters.sectors;
   }
-  
-  if (filters.countries !== undefined && filters.countries !== null && filters.countries.length > 0) {
-    variables.countries = filters.countries;
+
+  if (
+    filters.countries !== undefined &&
+    filters.countries !== null &&
+    filters.countries.length > 0
+  ) {
+    variables.isoCodes = filters.countries;
   }
-  
+
   if (filters.gender) {
     variables.gender = filters.gender;
   }
-  
+
   if (filters.status) {
     variables.status = filters.status;
   }
-  
+
   if (filters.minAmount !== undefined) {
     variables.minAmount = filters.minAmount;
   }
-  
+
   if (filters.maxAmount !== undefined) {
     variables.maxAmount = filters.maxAmount;
   }
-  
+
   if (filters.sortBy) {
     variables.sortBy = filters.sortBy;
   }
-  
+
   if (filters.searchTerm) {
     variables.queryString = filters.searchTerm;
   }
@@ -89,7 +95,6 @@ export const generateFilterVariables = (filters?: LoanFilters) => {
   if (filters.loanLimit !== undefined) {
     variables.loanLimit = filters.loanLimit;
   }
-  
-  console.log('Generated filter variables:', variables);
+
   return variables;
-};
+}

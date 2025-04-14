@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import BaseFilter from './BaseFilter.vue';
 import { useLoan } from '@/composables/useLoan';
+import { onMounted, ref } from 'vue';
+import BaseFilter from './BaseFilter.vue';
 
 /**
  * Component for filtering loans by country
- * 
+ *
  * Uses the generic base component BaseFilter to display
  * a dropdown list of available countries
  */
@@ -35,7 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   activeLoanCounts: () => ({}),
   filterId: 'country',
-  isDropdownOpen: false
+  isDropdownOpen: false,
 });
 
 // Emits
@@ -71,21 +71,27 @@ const getCountriesForFilter = () => {
   if (error.value) {
     return [];
   }
-  
-  return availableCountries.value.map(country => ({
+
+  return availableCountries.value.map((country) => ({
     id: country.isoCode || country.name,
     name: country.name,
-    count: country.count
+    count: country.count,
   }));
 };
 
 // Handling events from BaseFilter
-const handleUpdateSelection = (selection: any[]) => {
-  emit('update:selectedCountries', selection);
+const handleUpdateSelection = (selection: (string | number)[]) => {
+  emit(
+    'update:selectedCountries',
+    selection.map((item) => String(item))
+  );
 };
 
-const handleApplyFilter = (selection: any[]) => {
-  emit('filter', selection);
+const handleApplyFilter = (selection: (string | number)[]) => {
+  emit(
+    'filter',
+    selection.map((item) => String(item))
+  );
 };
 
 // Handle dropdown toggle event

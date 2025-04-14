@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { KivaText } from '../atoms';
 
 /**
  * Base component for dropdown filters with checkboxes
- * 
+ *
  * Used as a base for specific filters like SectorFilter and CountryFilter
  * Provides the basic user interface and common behavior
  */
@@ -54,7 +54,7 @@ const props = withDefaults(defineProps<Props>(), {
   applyText: 'Apply',
   clearText: 'Clear',
   filterId: '',
-  isDropdownOpen: false
+  isDropdownOpen: false,
 });
 
 // Emits
@@ -72,14 +72,17 @@ const selectedOptions = ref<(number | string)[]>(props.selectedItems || []);
 const isOpen = ref(props.isDropdownOpen);
 
 // Synchronize isOpen state with isDropdownOpen prop
-watch(() => props.isDropdownOpen, (newVal) => {
-  isOpen.value = newVal;
-});
+watch(
+  () => props.isDropdownOpen,
+  (newVal) => {
+    isOpen.value = newVal;
+  }
+);
 
 // Handles item selection/deselection
 const toggleItem = (itemId: number | string) => {
   if (selectedOptions.value.includes(itemId)) {
-    selectedOptions.value = selectedOptions.value.filter(id => id !== itemId);
+    selectedOptions.value = selectedOptions.value.filter((id) => id !== itemId);
   } else {
     selectedOptions.value.push(itemId);
   }

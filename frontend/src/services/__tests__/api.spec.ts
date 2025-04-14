@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchLoans, fetchLoanById, fetchFilterOptions } from '../api';
-import { fetchGraphQL } from '../graphqlClient';
-import { normalizeLoan } from '../mapper/loan';
 import { Loan } from '@/models/Loan';
 import { APIError } from '@/services/errors/apiErrors';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fetchFilterOptions, fetchLoanById, fetchLoans } from '../api';
+import { fetchGraphQL } from '../graphqlClient';
+import { normalizeLoan } from '../mapper/loan';
 
 vi.mock('../graphqlClient', () => ({
   fetchGraphQL: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../mapper/loan', () => ({
 }));
 
 vi.mock('global', () => ({
-  fetch: vi.fn()
+  fetch: vi.fn(),
 }));
 
 describe('API Service', () => {
@@ -26,7 +26,7 @@ describe('API Service', () => {
       status: 'fundraising',
       sector: { name: 'Agriculture' },
       geocode: { country: { name: 'United States' } },
-      image: { url: 'https://example.com/image1.jpg' }
+      image: { url: 'https://example.com/image1.jpg' },
     }),
     new Loan({
       id: 2,
@@ -35,8 +35,8 @@ describe('API Service', () => {
       status: 'fundraising',
       sector: { name: 'Education' },
       geocode: { country: { name: 'Canada' } },
-      image: { url: 'https://example.com/image2.jpg' }
-    })
+      image: { url: 'https://example.com/image2.jpg' },
+    }),
   ];
 
   beforeEach(() => {
@@ -102,19 +102,19 @@ describe('API Service', () => {
         lend: {
           loans: {
             totalCount: 2,
-            values: mockLoans.map(loan => ({
+            values: mockLoans.map((loan) => ({
               id: loan.id,
               name: loan.name,
               loanAmount: loan.loanAmount,
               status: loan.status,
               image: { url: loan.image.url },
               geocode: loan.geocode,
-              sector: { name: 'Agriculture' }
-            }))
-          }
-        }
+              sector: { name: 'Agriculture' },
+            })),
+          },
+        },
       };
-      
+
       vi.mocked(fetchGraphQL).mockResolvedValueOnce(mockResponse);
 
       const result = await fetchLoans(10, 0);
@@ -127,11 +127,11 @@ describe('API Service', () => {
         lend: {
           loans: {
             totalCount: 0,
-            values: []
-          }
-        }
+            values: [],
+          },
+        },
       };
-      
+
       vi.mocked(fetchGraphQL).mockResolvedValueOnce(mockResponse);
 
       const result = await fetchLoans(10, 0);

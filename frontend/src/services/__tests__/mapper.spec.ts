@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { normalizeLoan } from '../mapper/loan';
-import type { GraphQLLoan } from '../interfaces';
 import type { Loan } from '@/models/Loan';
+import { describe, expect, it } from 'vitest';
+import type { GraphQLLoan } from '../interfaces';
+import { normalizeLoan } from '../mapper/loan';
 
 describe('Loan Mapper', () => {
   it('should map GraphQL loan to Loan model', () => {
@@ -13,10 +13,12 @@ describe('Loan Mapper', () => {
       sector: { name: 'Agriculture' },
       geocode: { country: { name: 'United States' } },
       image: { url: 'https://example.com/image.jpg' },
-      borrowers: [{
-        firstName: 'John',
-        pictured: true
-      }]
+      borrowers: [
+        {
+          firstName: 'John',
+          pictured: true,
+        },
+      ],
     };
 
     const normalizedLoan = normalizeLoan(graphqlLoan);
@@ -35,7 +37,7 @@ describe('Loan Mapper', () => {
       status: 'fundraising',
       sector: { name: 'Agriculture' },
       geocode: { country: { name: 'United States' } },
-      image: { url: 'https://example.com/image.jpg' }
+      image: { url: 'https://example.com/image.jpg' },
     };
 
     const normalizedLoan = normalizeLoan(graphqlLoan);
@@ -47,7 +49,11 @@ describe('Loan Mapper', () => {
   });
 
   it('should throw an error when loan is null or undefined', () => {
-    expect(() => normalizeLoan(null as any)).toThrow('Cannot normalize null or undefined loan');
-    expect(() => normalizeLoan(undefined as any)).toThrow('Cannot normalize null or undefined loan');
+    expect(() => normalizeLoan(null as unknown as GraphQLLoan)).toThrow(
+      'Cannot normalize null or undefined loan'
+    );
+    expect(() => normalizeLoan(undefined as unknown as GraphQLLoan)).toThrow(
+      'Cannot normalize null or undefined loan'
+    );
   });
 });

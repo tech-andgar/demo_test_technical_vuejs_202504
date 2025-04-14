@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Saltamos temporalmente estas pruebas debido a problemas con los mocks
 describe.skip('KivaLoanGrid', () => {

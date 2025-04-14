@@ -1,13 +1,9 @@
-import { ref, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import {
-  fetchLoans,
-  fetchLoanById,
-  fetchFilterOptions
-} from '@/services/api';
-import { APIError, NetworkError, DataFormatError } from '@/services/errors/apiErrors';
-import type { LoanFilters } from '@/models/filters';
 import type { Loan } from '@/models/Loan';
+import type { LoanFilters } from '@/models/filters';
+import { fetchFilterOptions, fetchLoanById, fetchLoans } from '@/services/api';
+import { APIError, DataFormatError, NetworkError } from '@/services/errors/apiErrors';
+import { computed, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { KIVA_API_URL } from '../config';
 
 // Interfaces for filter options
@@ -76,16 +72,18 @@ export const useLoan = () => {
 
     if (err instanceof Error) {
       error.value = err;
-      
-      // Mensaje genérico basado en el tipo de error 
+
+      // Mensaje genérico basado en el tipo de error
       if (err.name === 'NetworkError') {
-        errorMessage.value = 'We could not connect to the server. Please check your internet connection.';
+        errorMessage.value =
+          'We could not connect to the server. Please check your internet connection.';
         console.error('Network error:', err.message);
       } else if (err.name === 'DataFormatError') {
         errorMessage.value = 'We received unexpected data from the server. Please try again.';
         console.error('Data format error:', err.message);
       } else if (err.name === 'APIError') {
-        errorMessage.value = 'An error occurred while processing your request. Please try again later.';
+        errorMessage.value =
+          'An error occurred while processing your request. Please try again later.';
         console.error('API error:', err.message);
       } else {
         errorMessage.value = 'An unexpected error occurred. Please try again.';
@@ -105,16 +103,32 @@ export const useLoan = () => {
    */
   const loadFilterOptions = async () => {
     try {
-      resetError();
       loadingFilters.value = true;
+      error.value = null;
       const options = await fetchFilterOptions();
       availableCountries.value = options.countries;
       availableSectors.value = options.sectors;
     } catch (err) {
       console.error('Error loading filter options:', err);
+      error.value =
+        err instanceof Error ? err : new Error('Error desconocido al cargar opciones de filtro');
+      errorMessage.value =
+        err instanceof Error ? err.message : 'Error desconocido al cargar opciones de filtro';
+
+      // Si es un error de red, asignar datos de respaldo pero no lanzar error
+      if (err instanceof NetworkError) {
+        availableCountries.value = [];
+        availableSectors.value = [
+          { name: 'Agriculture', id: 1 },
+          { name: 'Services', id: 4 },
+          { name: 'Food', id: 12 },
+          { name: 'Retail', id: 7 },
+        ];
+      } else {
+        throw new Error(errorMessage.value);
+      }
+    } finally {
       loadingFilters.value = false;
-      const errorMessage = err instanceof Error ? err.message : 'Error loading loans';
-      throw new Error(errorMessage);
     }
   };
 
@@ -128,7 +142,7 @@ export const useLoan = () => {
    */
   const getLoans = async (
     limit: number = perPage.value,
-    offset: number = 0,
+    offset = 0,
     loanFilters?: LoanFilters
   ): Promise<Loan[]> => {
     try {
@@ -165,9 +179,19 @@ export const useLoan = () => {
       currentPage.value = page;
     } catch (err) {
       console.error('Error loading loans:', err);
+      error.value = err instanceof Error ? err : new Error('Error desconocido al cargar préstamos');
+      errorMessage.value =
+        err instanceof Error ? err.message : 'Error desconocido al cargar préstamos';
+
+      // Si es un error de red, establecer datos vacíos pero no lanzar error
+      if (err instanceof NetworkError) {
+        loans.value = [];
+        totalCount.value = 0;
+      } else {
+        throw new Error(errorMessage.value);
+      }
+    } finally {
       loadingLoans.value = false;
-      const errorMessage = err instanceof Error ? err.message : 'Error loading loans';
-      throw new Error(errorMessage);
     }
   };
 
@@ -229,11 +253,15 @@ export const useLoan = () => {
   loadFilterOptions();
 
   // Observar cambios en los filtros
-  watch(filters, () => {
-    console.log('Filtros cambiados en useLoan:', filters.value);
-    currentPage.value = 1; // Reset a la primera página cuando cambian los filtros
-    loadLoans(1);
-  }, { deep: true });
+  watch(
+    filters,
+    () => {
+      console.log('Filtros cambiados en useLoan:', filters.value);
+      currentPage.value = 1; // Reset a la primera página cuando cambian los filtros
+      loadLoans(1);
+    },
+    { deep: true }
+  );
 
   return {
     // Data
