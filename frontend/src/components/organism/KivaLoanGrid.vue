@@ -39,7 +39,7 @@ const handleLoanClick = (loanId: number) => {
         :imageUrl="loan.image.url"
         :whySpecial="loan.whySpecial"
         :location="loan.geocode?.country?.name || ''"
-        :categories="loan.themes || []"
+        :categories="[]"
         @click="handleLoanClick(loan.id)"
         />
 

@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { fetchLoans, fetchLoanById, type Loan } from '@/services/api';
+import { fetchLoans, fetchLoanById } from '@/services/api';
+import type { Loan } from '@/services/interfaces';
 
 export const useLoan = () => {
   const route = useRoute();
