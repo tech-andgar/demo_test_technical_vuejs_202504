@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       repo_name: ${{ steps.repo-name.outputs.REPO_NAME }}
+      cache_hit: ${{ steps.cache-node-modules.outputs.cache-hit }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -40,15 +41,16 @@ jobs:
         cache: 'pnpm'
         cache-dependency-path: frontend/pnpm-lock.yaml
 
-    - name: Install Dependencies
-      working-directory: ./frontend
-      run: pnpm install
-
     - name: Cache node_modules
+      id: cache-node-modules
       uses: actions/cache@v3
       with:
         path: frontend/node_modules
         key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
+    - name: Install Dependencies
+      working-directory: ./frontend
+      run: pnpm install
 
   test:
     needs: setup
@@ -66,12 +68,24 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
 
     - name: Restore node_modules
       uses: actions/cache@v3
       with:
         path: frontend/node_modules
         key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+
+    - name: Install Dependencies if Needed
+      working-directory: ./frontend
+      run: |
+        if [ ! -d "node_modules" ]; then
+          echo "node_modules not found, installing dependencies..."
+          pnpm install
+        fi
 
     - name: Cache test results
       uses: actions/cache@v3
@@ -107,12 +121,24 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'pnpm'
+        cache-dependency-path: frontend/pnpm-lock.yaml
 
     - name: Restore node_modules
       uses: actions/cache@v3
       with:
         path: frontend/node_modules
         key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+
+    - name: Install Dependencies if Needed
+      working-directory: ./frontend
+      run: |
+        if [ ! -d "node_modules" ]; then
+          echo "node_modules not found, installing dependencies..."
+          pnpm install
+        fi
 
     - name: Cache build
       uses: actions/cache@v3
