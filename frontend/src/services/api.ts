@@ -2,7 +2,10 @@ import type { Loan } from './interfaces';
 import { fetchGraphQL } from './graphqlClient';
 import { normalizeLoan } from './mapper/loan';
 
-export const fetchLoans = async (limit: number = 12, offset: number = 0): Promise<{ loans: Loan[], totalCount: number }> => {
+export const fetchLoans = async (
+  limit: number = 12,
+  offset: number = 0
+): Promise<{ loans: Loan[]; totalCount: number }> => {
   const query = `
     query GetLoans($limit: Int!, $offset: Int!) {
       lend {

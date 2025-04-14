@@ -1,4 +1,5 @@
-const KIVA_API_URL: string = import.meta.env.VITE_KIVA_API_URL || 'https://marketplace-api.k1.kiva.org/graphql';
+const KIVA_API_URL: string =
+  import.meta.env.VITE_KIVA_API_URL || 'https://marketplace-api.k1.kiva.org/graphql';
 
 export async function fetchGraphQL(query: string, variables: Record<string, any> = {}) {
   const response = await fetch(KIVA_API_URL, {

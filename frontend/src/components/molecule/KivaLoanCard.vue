@@ -13,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'click'): void
+  (e: 'click'): void;
 }>();
 
 const imageError = ref(false);
@@ -31,7 +31,7 @@ function handleImageLoad() {
 
 const handleClick = () => {
   emit('click');
-}
+};
 
 const progressPercentage = computed(() => {
   if (props.loanAmount === 0) return 0;
