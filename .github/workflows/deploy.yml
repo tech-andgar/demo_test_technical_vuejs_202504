@@ -56,6 +56,10 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Get repository name
+      id: repo-name
+      run: echo "REPO_NAME=$(echo '${{ github.repository }}' | cut -d'/' -f2)" >> $GITHUB_OUTPUT
+
     - name: Setup pnpm
       uses: pnpm/action-setup@v3
       with:
@@ -82,11 +86,16 @@ jobs:
       working-directory: ./frontend
       run: pnpm install
 
+    - name: Update vite.config.ts
+      working-directory: ./frontend
+      run: |
+        sed -i.bak "s|base: '/full-stack-challenge/'|base: '/${{ steps.repo-name.outputs.REPO_NAME }}/'|g" vite.config.ts
+
     - name: Build
       working-directory: ./frontend
       run: pnpm run build
       env:
-        BASE_URL: '/full-stack-challenge/'
+        BASE_URL: '/${{ steps.repo-name.outputs.REPO_NAME }}/'
 
     - name: Create .nojekyll file
       run: touch frontend/dist/.nojekyll
