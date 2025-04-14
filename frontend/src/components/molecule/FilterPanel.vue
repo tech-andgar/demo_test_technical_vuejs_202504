@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { KivaText } from '../atoms';
 import SectorFilter from './SectorFilter.vue';
 import CountryFilter from './CountryFilter.vue';
@@ -37,7 +37,7 @@ const emit = defineEmits<{
 }>();
 
 // Acceder a los sectores disponibles
-const { availableSectors, loadFilterOptions, loadingFilters } = useLoan();
+const { loadFilterOptions, loadingFilters } = useLoan();
 
 // Estado local
 const currentFilters = ref<LoanFilters>(props.filters || {});
@@ -58,21 +58,23 @@ if (props.filters?.countries) {
   tempFilters.value.countries = [...props.filters.countries];
 }
 
+// Carga las opciones de filtro al montar el componente
+onMounted(() => {
+  loadFilterOptions();
+});
+
 // Actualiza la selección temporal de sectores
 const handleSectorSelection = (sectors: number[]) => {
-  console.log('Actualizando selección temporal de sectores:', sectors);
   tempFilters.value.sectors = sectors;
 };
 
 // Actualiza la selección temporal de países
 const handleCountrySelection = (countries: string[]) => {
-  console.log('Actualizando selección temporal de países:', countries);
   tempFilters.value.countries = countries;
 };
 
 // Aplica los filtros cuando se presiona Apply en cualquier filtro
 const applyFilters = () => {
-  console.log('Aplicando filtros');
   const newFilters: LoanFilters = {};
   
   if (tempFilters.value.sectors.length > 0) {
@@ -90,7 +92,6 @@ const applyFilters = () => {
 
 // Limpia todos los filtros
 const clearAllFilters = () => {
-  console.log('Limpiando todos los filtros');
   tempFilters.value = { sectors: [], countries: [] };
   currentFilters.value = {};
   emit('update:filters', {});
@@ -205,85 +206,11 @@ const toggleFilterPanel = () => {
   margin-bottom: 1.5rem;
 }
 
-.filter-disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.disabled-note {
-  margin-bottom: 0.5rem;
-  font-style: italic;
-}
-
-.toggle-icon {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
 .filter-status {
   display: flex;
   justify-content: center;
   padding: 1rem 0;
   color: #6b7280;
-}
-
-.filter-note {
-  margin-top: 1rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid #e5e7eb;
-}
-
-.sector-list {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.sector-item {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 0;
-  cursor: pointer;
-}
-
-.sector-item:hover {
-  color: #10b981;
-}
-
-.sector-item.selected {
-  color: #10b981;
-  font-weight: 500;
-}
-
-.checkbox {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 1rem;
-  height: 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  margin-right: 0.75rem;
-}
-
-.selected .checkbox {
-  background-color: #10b981;
-  border-color: #10b981;
-}
-
-.checkmark {
-  color: white;
-  font-size: 0.75rem;
-  line-height: 1;
-}
-
-.sector-name {
-  font-size: 0.875rem;
-}
-
-.selection-count {
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-weight: normal;
 }
 
 /* Responsive */
