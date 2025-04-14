@@ -87,11 +87,11 @@ jobs:
           pnpm install
         fi
 
-    - name: Cache test results
+    - name: Restore Vitest Cache
+      id: cache-vitest-restore
       uses: actions/cache@v3
       with:
         path: |
-          frontend/coverage
           frontend/node_modules/.vitest
         key: ${{ runner.os }}-vitest-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
         restore-keys: |
@@ -100,6 +100,13 @@ jobs:
     - name: Run Tests
       working-directory: ./frontend
       run: pnpm run test:unit
+
+    - name: Save Vitest Cache
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          frontend/node_modules/.vitest
+        key: ${{ runner.os }}-vitest-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
 
     - name: Run Type Check
       working-directory: ./frontend
@@ -140,11 +147,11 @@ jobs:
           pnpm install
         fi
 
-    - name: Cache build
+    - name: Restore Vite Build Cache
+      id: cache-vite-restore
       uses: actions/cache@v3
       with:
         path: |
-          frontend/dist
           frontend/node_modules/.vite
         key: ${{ runner.os }}-vite-build-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
         restore-keys: |
@@ -160,6 +167,13 @@ jobs:
       run: pnpm run build
       env:
         BASE_URL: '/${{ needs.setup.outputs.repo_name }}/'
+
+    - name: Save Vite Build Cache
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          frontend/node_modules/.vite
+        key: ${{ runner.os }}-vite-build-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
 
     - name: Create .nojekyll file
       run: touch frontend/dist/.nojekyll
