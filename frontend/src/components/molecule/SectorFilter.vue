@@ -19,13 +19,19 @@ interface Props {
   placeholder?: string;
   /** Si el componente está deshabilitado */
   disabled?: boolean;
+  /** Identificador único para el filtro */
+  filterId?: string;
+  /** Si el dropdown está abierto (controlado externamente) */
+  isDropdownOpen?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showCount: true,
   selectedSectors: () => [],
   placeholder: 'Select sectors',
-  disabled: false
+  disabled: false,
+  filterId: 'sector',
+  isDropdownOpen: false
 });
 
 // Emits
@@ -34,6 +40,8 @@ const emit = defineEmits<{
   (e: 'update:selectedSectors', sectors: number[]): void;
   /** Emitido cuando se aplica el filtro */
   (e: 'filter', sectors: number[]): void;
+  /** Emitido cuando se cambia el estado del dropdown */
+  (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
 // Composable para acceder a la funcionalidad de préstamos
@@ -56,6 +64,11 @@ const handleUpdateSelection = (selection: any[]) => {
 const handleApplyFilter = (selection: any[]) => {
   emit('filter', selection);
 };
+
+// Manejar el evento de toggle del dropdown
+const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
+  emit('toggle-dropdown', isOpen, filterId);
+};
 </script>
 
 <template>
@@ -66,7 +79,12 @@ const handleApplyFilter = (selection: any[]) => {
     :disabled="disabled"
     :loading="loadingFilters"
     :show-count="showCount"
+    :filter-id="filterId"
+    :is-dropdown-open="isDropdownOpen"
+    loading-message="Loading sectors..."
+    empty-message="No sectors available"
     @update:selection="handleUpdateSelection"
     @apply="handleApplyFilter"
+    @toggle-dropdown="handleToggleDropdown"
   />
 </template> 

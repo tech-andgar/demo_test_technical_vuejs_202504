@@ -22,6 +22,10 @@ interface Props {
   disabled?: boolean;
   /** Contador de préstamos activos por país */
   activeLoanCounts?: Record<string, number>;
+  /** Identificador único para el filtro */
+  filterId?: string;
+  /** Si el dropdown está abierto (controlado externamente) */
+  isDropdownOpen?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,7 +33,9 @@ const props = withDefaults(defineProps<Props>(), {
   selectedCountries: () => [],
   placeholder: 'Select countries',
   disabled: false,
-  activeLoanCounts: () => ({})
+  activeLoanCounts: () => ({}),
+  filterId: 'country',
+  isDropdownOpen: false
 });
 
 // Emits
@@ -38,6 +44,8 @@ const emit = defineEmits<{
   (e: 'update:selectedCountries', countries: string[]): void;
   /** Emitido cuando se aplica el filtro */
   (e: 'filter', countries: string[]): void;
+  /** Emitido cuando se cambia el estado del dropdown */
+  (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
 // Composable para acceder a la funcionalidad de préstamos
@@ -80,6 +88,11 @@ const handleApplyFilter = (selection: any[]) => {
   emit('filter', selection);
 };
 
+// Manejar el evento de toggle del dropdown
+const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
+  emit('toggle-dropdown', isOpen, filterId);
+};
+
 // Reintentar carga en caso de error
 const retryLoading = async () => {
   error.value = null;
@@ -101,10 +114,13 @@ const retryLoading = async () => {
       :disabled="disabled"
       :loading="loadingFilters"
       :show-count="showCount"
+      :filter-id="filterId"
+      :is-dropdown-open="isDropdownOpen"
       loading-message="Loading countries..."
       empty-message="No countries available"
       @update:selection="handleUpdateSelection"
       @apply="handleApplyFilter"
+      @toggle-dropdown="handleToggleDropdown"
     />
     
     <!-- Error handling outside BaseFilter -->

@@ -49,6 +49,9 @@ const tempFilters = ref<{sectors: number[], countries: string[]}>({
   countries: []
 });
 
+// Estado para controlar qué filtro está abierto
+const activeFilterId = ref<string | null>(null);
+
 // Inicializar selecciones basadas en los filtros iniciales
 if (props.filters?.sectors) {
   tempFilters.value.sectors = [...props.filters.sectors];
@@ -102,6 +105,20 @@ const clearAllFilters = () => {
 const toggleFilterPanel = () => {
   isPanelOpen.value = !isPanelOpen.value;
 };
+
+// Gestiona qué filtro está abierto
+const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
+  if (isOpen) {
+    activeFilterId.value = filterId;
+  } else if (activeFilterId.value === filterId) {
+    activeFilterId.value = null;
+  }
+};
+
+// Comprueba si un filtro está actualmente abierto
+const isFilterOpen = (filterId: string): boolean => {
+  return activeFilterId.value === filterId;
+};
 </script>
 
 <template>
@@ -137,7 +154,10 @@ const toggleFilterPanel = () => {
           :selected-sectors="tempFilters.sectors"
           @update:selected-sectors="handleSectorSelection"
           @filter="applyFilters"
+          @toggle-dropdown="handleToggleDropdown"
           placeholder="Sector"
+          filter-id="sector"
+          :is-dropdown-open="isFilterOpen('sector')"
         />
       </div>
       
@@ -147,7 +167,10 @@ const toggleFilterPanel = () => {
           :selected-countries="tempFilters.countries"
           @update:selected-countries="handleCountrySelection"
           @filter="applyFilters"
+          @toggle-dropdown="handleToggleDropdown"
           placeholder="País"
+          filter-id="country"
+          :is-dropdown-open="isFilterOpen('country')"
           :active-loan-counts="activeLoanCounts"
         />
       </div>

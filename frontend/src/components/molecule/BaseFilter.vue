@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { KivaText } from '../atoms';
 
 /**
@@ -37,6 +37,10 @@ interface Props {
   applyText?: string;
   /** Texto para el botón limpiar */
   clearText?: string;
+  /** Identificador único para el filtro */
+  filterId?: string;
+  /** Si el dropdown está abierto (controlado desde el exterior) */
+  isDropdownOpen?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,7 +52,9 @@ const props = withDefaults(defineProps<Props>(), {
   emptyMessage: 'No items available',
   loadingMessage: 'Loading...',
   applyText: 'Apply',
-  clearText: 'Clear'
+  clearText: 'Clear',
+  filterId: '',
+  isDropdownOpen: false
 });
 
 // Emits
@@ -57,11 +63,18 @@ const emit = defineEmits<{
   (e: 'update:selection', selection: (number | string)[]): void;
   /** Emitido cuando se aplica el filtro */
   (e: 'apply', selection: (number | string)[]): void;
+  /** Emitido cuando se cambia el estado del dropdown */
+  (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
 // Estado local
 const selectedOptions = ref<(number | string)[]>(props.selectedItems || []);
-const isOpen = ref(false);
+const isOpen = ref(props.isDropdownOpen);
+
+// Sincronizar el estado isOpen con la prop isDropdownOpen
+watch(() => props.isDropdownOpen, (newVal) => {
+  isOpen.value = newVal;
+});
 
 // Gestiona la selección/deselección de un elemento
 const toggleItem = (itemId: number | string) => {
@@ -76,7 +89,7 @@ const toggleItem = (itemId: number | string) => {
 const applyFilter = () => {
   emit('update:selection', selectedOptions.value);
   emit('apply', selectedOptions.value);
-  isOpen.value = false;
+  toggleDropdown(false);
 };
 
 // Limpia todos los filtros
@@ -84,18 +97,25 @@ const clearFilter = () => {
   selectedOptions.value = [];
   emit('update:selection', []);
   emit('apply', []);
-  isOpen.value = false;
+  toggleDropdown(false);
 };
 
 // Determina si un elemento está seleccionado
 const isSelected = (itemId: number | string): boolean => {
   return selectedOptions.value.includes(itemId);
 };
+
+// Gestiona la apertura/cierre del dropdown
+const toggleDropdown = (open?: boolean) => {
+  const newState = open !== undefined ? open : !isOpen.value;
+  isOpen.value = newState;
+  emit('toggle-dropdown', newState, props.filterId);
+};
 </script>
 
 <template>
   <div class="base-filter" :class="{ 'disabled': props.disabled }">
-    <div class="filter-header" @click="!props.disabled && (isOpen = !isOpen)">
+    <div class="filter-header" @click="!props.disabled && toggleDropdown()">
       <KivaText variant="h6" size="md">
         {{ props.placeholder }}
         <span v-if="selectedOptions.length > 0" class="selected-count">
