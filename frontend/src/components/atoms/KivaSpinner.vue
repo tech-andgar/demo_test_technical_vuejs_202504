@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Componente de spinner para indicar carga
- * 
+ *
  * Proporciona una indicación visual de que se está cargando contenido
  */
 
@@ -15,7 +15,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   size: 'md',
-  color: '#10b981' // Verde Kiva
+  color: '#10b981', // Verde Kiva
 });
 
 // Calcular el tamaño en píxeles
@@ -23,7 +23,7 @@ const sizeMap = {
   sm: 16,
   md: 24,
   lg: 36,
-  xl: 48
+  xl: 48,
 };
 
 const pixelSize = sizeMap[props.size] || sizeMap.md;

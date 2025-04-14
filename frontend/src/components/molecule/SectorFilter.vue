@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import BaseFilter from './BaseFilter.vue';
 import { useLoan } from '@/composables/useLoan';
+import BaseFilter from './BaseFilter.vue';
 
 /**
  * Component for filtering loans by sector
- * 
+ *
  * Uses the generic base component BaseFilter to display
  * a dropdown list of available sectors
  */
@@ -31,7 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Select sectors',
   disabled: false,
   filterId: 'sector',
-  isDropdownOpen: false
+  isDropdownOpen: false,
 });
 
 // Emits
@@ -48,21 +48,27 @@ const emit = defineEmits<{
 const { availableSectors, loadFilterOptions, loadingFilters } = useLoan();
 
 // Función para transformar datos de sector al formato del filtro base
-const transformDataForFilter = (sectors: any[]) => {
-  return sectors.map(sector => ({
-    id: sector.id,
+const transformDataForFilter = (sectors: { id?: number; name: string; count?: number }[]) => {
+  return sectors.map((sector) => ({
+    id: sector.id || 0,
     name: sector.name,
-    count: sector.count
+    count: sector.count || 0,
   }));
 };
 
 // Handling events from BaseFilter
-const handleUpdateSelection = (selection: any[]) => {
-  emit('update:selectedSectors', selection);
+const handleUpdateSelection = (selection: (string | number)[]) => {
+  emit(
+    'update:selectedSectors',
+    selection.map((id) => (typeof id === 'string' ? Number.parseInt(id, 10) : id))
+  );
 };
 
-const handleApplyFilter = (selection: any[]) => {
-  emit('filter', selection);
+const handleApplyFilter = (selection: (string | number)[]) => {
+  emit(
+    'filter',
+    selection.map((id) => (typeof id === 'string' ? Number.parseInt(id, 10) : id))
+  );
 };
 
 // Handle dropdown toggle event

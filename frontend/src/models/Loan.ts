@@ -105,11 +105,11 @@ export class Loan {
    * @param maxLength Maximum length of the returned string
    * @returns Shortened special description with ellipsis if needed
    */
-  getShortDescription(maxLength: number = 100): string {
+  getShortDescription(maxLength = 100): string {
     if (!this.whySpecial || this.whySpecial.length <= maxLength) {
       return this.whySpecial || '';
     }
 
-    return this.whySpecial.substring(0, maxLength - 3) + '...';
+    return `${this.whySpecial.substring(0, maxLength - 3)}...`;
   }
 }

@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { KivaText } from '../atoms';
-import SectorFilter from './SectorFilter.vue';
-import CountryFilter from './CountryFilter.vue';
-import type { LoanFilters } from '@/models/filters';
 import { useLoan } from '@/composables/useLoan';
+import type { LoanFilters } from '@/models/filters';
+import { computed, onMounted, ref } from 'vue';
+import { KivaText } from '../atoms';
+import CountryFilter from './CountryFilter.vue';
+import SectorFilter from './SectorFilter.vue';
 
 /**
  * Filter panel for loans
- * 
+ *
  * Contains all available filters and allows applying them to the loans list
  */
 
@@ -25,7 +25,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   filters: () => ({}),
   title: 'Filter Results',
-  activeLoanCounts: () => ({})
+  activeLoanCounts: () => ({}),
 });
 
 // Emits
@@ -44,9 +44,9 @@ const currentFilters = ref<LoanFilters>(props.filters || {});
 const isPanelOpen = ref(false);
 
 // Estado temporal para mantener las selecciones antes de aplicar
-const tempFilters = ref<{sectors: number[], countries: string[]}>({
+const tempFilters = ref<{ sectors: number[]; countries: string[] }>({
   sectors: [],
-  countries: []
+  countries: [],
 });
 
 // Estado para controlar qué filtro está abierto
@@ -79,15 +79,15 @@ const handleCountrySelection = (countries: string[]) => {
 // Aplica los filtros cuando se presiona Apply en cualquier filtro
 const applyFilters = () => {
   const newFilters: LoanFilters = {};
-  
+
   if (tempFilters.value.sectors.length > 0) {
     newFilters.sectors = [...tempFilters.value.sectors];
   }
-  
+
   if (tempFilters.value.countries.length > 0) {
     newFilters.countries = [...tempFilters.value.countries];
   }
-  
+
   currentFilters.value = newFilters;
   emit('update:filters', newFilters);
   emit('filter', newFilters);
@@ -123,19 +123,19 @@ const isFilterOpen = (filterId: string): boolean => {
 // Calculate a text that explains the current filters to show to the user
 const appliedFiltersText = computed(() => {
   const filters = [];
-  
+
   if (tempFilters.value.sectors.length > 0) {
     filters.push(`${tempFilters.value.sectors.length} sectors`);
   }
-  
+
   if (tempFilters.value.countries.length > 0) {
     filters.push(`${tempFilters.value.countries.length} countries`);
   }
-  
+
   if (filters.length === 0) {
-    return "No filters applied";
+    return 'No filters applied';
   }
-  
+
   return `Applied filters: ${filters.join(' and ')}`;
 });
 </script>

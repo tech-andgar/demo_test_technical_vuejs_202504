@@ -1,4 +1,4 @@
-import { NetworkError, DataFormatError } from './errors/apiErrors';
+import { DataFormatError, NetworkError } from './errors/apiErrors';
 
 /**
  * The URL for the Kiva API
@@ -18,7 +18,7 @@ interface GraphQLResponse<T> {
       column: number;
     }>;
     path?: string[];
-    extensions?: Record<string, any>;
+    extensions?: Record<string, unknown>;
   }>;
 }
 
@@ -33,7 +33,7 @@ interface GraphQLResponse<T> {
  */
 export async function fetchGraphQL<T>(
   query: string,
-  variables: Record<string, any> = {}
+  variables: Record<string, unknown> = {}
 ): Promise<T> {
   try {
     const response = await fetch(KIVA_API_URL, {
@@ -56,13 +56,15 @@ export async function fetchGraphQL<T>(
       } catch {
         errorDetails = 'Could not get error details';
       }
-      
-      throw new NetworkError(`GraphQL request failed: ${response.status} ${response.statusText} - ${errorDetails}`);
+
+      throw new NetworkError(
+        `GraphQL request failed: ${response.status} ${response.statusText} - ${errorDetails}`
+      );
     }
 
     const result = (await response.json()) as GraphQLResponse<T>;
 
-    if (result.errors && result.errors.length) {
+    if (result.errors?.length) {
       throw new DataFormatError(
         `GraphQL errors: ${result.errors.map((e) => e.message).join(', ')}`,
         result.errors

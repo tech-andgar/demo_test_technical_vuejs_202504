@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import type { Loan } from '@/models/Loan';
+import { computed, ref } from 'vue';
 
-import { KivaText, KivaBadge, KivaProgressBar, KivaImage } from '../atoms';
+import { KivaBadge, KivaImage, KivaProgressBar, KivaText } from '../atoms';
 
 interface Props {
   id?: number;
@@ -31,22 +31,22 @@ const props = withDefaults(defineProps<Props>(), {
   remainingAmount: undefined,
   isFullyFunded: undefined,
   categories: () => [],
-  loan: undefined
+  loan: undefined,
 });
 
 // Computados para obtener los valores desde props o loan
 const getId = computed(() => props.id ?? props.loan?.id);
 const getName = computed(() => props.name ?? props.loan?.getPrimaryBorrowerName());
 const getLoanAmount = computed(() => props.loanAmount ?? props.loan?.loanAmount ?? 0);
-const getFundedAmount = computed(() => props.fundedAmount ?? props.loan?.loanFundraisingInfo.fundedAmount ?? 0);
+const getFundedAmount = computed(
+  () => props.fundedAmount ?? props.loan?.loanFundraisingInfo.fundedAmount ?? 0
+);
 const getWhySpecial = computed(() => props.whySpecial ?? props.loan?.whySpecial ?? '');
 const getImageUrl = computed(() => props.imageUrl ?? props.loan?.image.url ?? '');
 const getLocation = computed(() => props.location ?? props.loan?.getCountryName());
 const getCategories = computed(() => props.categories ?? props.loan?.themes ?? []);
 
-const emit = defineEmits<{
-  (e: 'click'): void;
-}>();
+const emit = defineEmits<(e: 'click') => void>();
 
 const selectedAmount = ref(25);
 
@@ -58,7 +58,7 @@ const progressPercentage = computed(() => {
   if (props.fundingPercentage !== undefined) {
     return props.fundingPercentage;
   }
-  
+
   if (props.loan) {
     return props.loan.getFundingPercentage();
   }
@@ -72,11 +72,11 @@ const amountToGo = computed(() => {
   if (props.remainingAmount !== undefined) {
     return props.remainingAmount;
   }
-  
+
   if (props.loan) {
     return props.loan.getRemainingAmount();
   }
-  
+
   return getLoanAmount.value - getFundedAmount.value;
 });
 

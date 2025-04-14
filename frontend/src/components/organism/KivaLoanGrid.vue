@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watchEffect } from 'vue';
-import { KivaText, KivaSpinner } from '../atoms';
+import { useLoan } from '@/composables/useLoan';
+import type { Loan } from '@/models/Loan';
+import type { LoanFilters } from '@/models/filters';
+import { computed, onMounted, ref, watchEffect } from 'vue';
+import { KivaSpinner, KivaText } from '../atoms';
 import FilterPanel from '../molecule/FilterPanel.vue';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
-import type { LoanFilters } from '@/models/filters';
-import type { Loan } from '@/models/Loan';
-import { useLoan } from '@/composables/useLoan';
 
 /**
  * Grid component for displaying Kiva loans
@@ -43,28 +43,28 @@ const currentPage = ref(1);
 const isLoading = ref(true);
 
 // Loan composable
-const { 
-  loans, 
-  totalCount, 
-  loadLoans, 
+const {
+  loans,
+  totalCount,
+  loadLoans,
   loadFilterOptions,
   availableSectors,
   loadingFilters,
   loadingLoans,
   availableCountries,
-  updateFilters
+  updateFilters,
 } = useLoan();
 
 // Load data when the component is mounted
 onMounted(async () => {
   isLoading.value = true;
-  
+
   // Load filter options (sectors)
   await loadFilterOptions();
-  
+
   // Load loans
   await loadLoans(1);
-  
+
   isLoading.value = false;
 });
 
@@ -74,10 +74,10 @@ watchEffect(async () => {
   console.log('Filtering loans with:', filters.value);
   isLoading.value = true;
   currentPage.value = 1; // Reset to the first page
-  
+
   // Update filters in the composable
   await updateFilters(filters.value);
-  
+
   isLoading.value = false;
 });
 
@@ -94,46 +94,46 @@ const totalPages = computed(() => {
 // Cambiar de página
 const changePage = async (newPage: number) => {
   if (newPage < 1 || newPage > totalPages.value) return;
-  
+
   isLoading.value = true;
   currentPage.value = newPage;
-  
+
   await loadLoans(newPage);
-  
+
   isLoading.value = false;
 };
 
 // Apply filters
 const applyFilters = async (newFilters: LoanFilters) => {
   console.log('Applying filters:', newFilters);
-  
+
   // Update local filters
   filters.value = { ...newFilters };
-  
+
   // Set loading state
   isLoading.value = true;
-  
+
   // Reset to first page when filters change
   currentPage.value = 1;
-  
+
   // Update filters in composable
   await updateFilters(filters.value);
-  
+
   // End loading state
   isLoading.value = false;
-  
+
   console.log('Filtered loans loaded:', filters.value);
 };
 
 // Calculate active loan counts by country
 const activeLoanCounts = computed(() => {
   const counts: Record<string, number> = {};
-  loans.value.forEach(loan => {
+  for (const loan of loans.value) {
     const isoCode = loan.geocode?.country?.isoCode;
     if (isoCode) {
       counts[isoCode] = (counts[isoCode] || 0) + 1;
     }
-  });
+  }
   return counts;
 });
 </script>

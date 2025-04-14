@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useLoan } from '../useLoan';
-import { fetchLoans, fetchLoanById, fetchFilterOptions } from '@/services/api';
 import { Loan } from '@/models/Loan';
+import { fetchFilterOptions, fetchLoanById, fetchLoans } from '@/services/api';
 import { APIError } from '@/services/errors/apiErrors';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useLoan } from '../useLoan';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
   fetchLoanById: vi.fn(),
-  fetchFilterOptions: vi.fn()
+  fetchFilterOptions: vi.fn(),
 }));
 
 describe('useLoan', () => {
@@ -18,7 +18,7 @@ describe('useLoan', () => {
     status: 'fundraising',
     sector: { name: 'Agriculture' },
     geocode: { country: { name: 'United States' } },
-    image: { url: 'https://example.com/image.jpg' }
+    image: { url: 'https://example.com/image.jpg' },
   };
 
   const createMockLoan = (overrides = {}) => {
@@ -30,7 +30,7 @@ describe('useLoan', () => {
     // Mock the fetchFilterOptions function to avoid unhandled rejections
     vi.mocked(fetchFilterOptions).mockResolvedValue({
       sectors: [],
-      countries: []
+      countries: [],
     });
   });
 
@@ -38,7 +38,7 @@ describe('useLoan', () => {
     it('should handle API errors', async () => {
       vi.mocked(fetchLoans).mockRejectedValueOnce(new APIError('Test error'));
       const { loadLoans } = useLoan();
-      
+
       await expect(loadLoans(1)).rejects.toThrow('Test error');
     });
 
@@ -46,7 +46,7 @@ describe('useLoan', () => {
       const mockLoans = [createMockLoan()];
       vi.mocked(fetchLoans).mockResolvedValueOnce({
         loans: mockLoans,
-        total: 1
+        total: 1,
       });
       const { loadLoans, loans, totalCount } = useLoan();
       await loadLoans(1);
@@ -57,7 +57,7 @@ describe('useLoan', () => {
     it('should handle network errors', async () => {
       vi.mocked(fetchLoans).mockRejectedValueOnce(new Error('Network error'));
       const { loadLoans } = useLoan();
-      
+
       await expect(loadLoans(1)).rejects.toThrow('Network error');
     });
   });
