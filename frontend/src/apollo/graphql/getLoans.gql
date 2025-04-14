@@ -1,0 +1,19 @@
+query GetLoans($limit: Int!, $offset: Int!) {
+  lend {
+    loans(limit: $limit, offset: $offset) {
+      totalCount
+      values {
+        id
+        name
+        loanAmount
+        loanFundraisingInfo {
+          fundedAmount
+        }
+        image {
+          url(customSize: "w480h300")
+        }
+        whySpecial
+      }
+    }
+  }
+} 
