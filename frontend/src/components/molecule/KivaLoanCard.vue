@@ -1,21 +1,48 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import type { Loan } from '@/models/Loan';
 
 import { KivaText, KivaBadge, KivaProgressBar, KivaImage } from '../atoms';
 
-const props = defineProps<{
-  id: number;
-  name: string;
-  loanAmount: number;
-  fundedAmount: number;
+interface Props {
+  id?: number;
+  name?: string;
+  loanAmount?: number;
+  fundedAmount?: number;
   fundingPercentage?: number;
-  imageUrl: string;
-  whySpecial: string;
+  imageUrl?: string;
+  whySpecial?: string;
   location?: string;
   remainingAmount?: number;
   isFullyFunded?: boolean;
   categories?: string[];
-}>();
+  loan?: Loan;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  id: undefined,
+  name: undefined,
+  loanAmount: undefined,
+  fundedAmount: undefined,
+  fundingPercentage: undefined,
+  imageUrl: undefined,
+  whySpecial: undefined,
+  location: undefined,
+  remainingAmount: undefined,
+  isFullyFunded: undefined,
+  categories: () => [],
+  loan: undefined
+});
+
+// Computados para obtener los valores desde props o loan
+const getId = computed(() => props.id ?? props.loan?.id);
+const getName = computed(() => props.name ?? props.loan?.getPrimaryBorrowerName());
+const getLoanAmount = computed(() => props.loanAmount ?? props.loan?.loanAmount ?? 0);
+const getFundedAmount = computed(() => props.fundedAmount ?? props.loan?.loanFundraisingInfo.fundedAmount ?? 0);
+const getWhySpecial = computed(() => props.whySpecial ?? props.loan?.whySpecial ?? '');
+const getImageUrl = computed(() => props.imageUrl ?? props.loan?.image.url ?? '');
+const getLocation = computed(() => props.location ?? props.loan?.getCountryName());
+const getCategories = computed(() => props.categories ?? props.loan?.themes ?? []);
 
 const emit = defineEmits<{
   (e: 'click'): void;
@@ -31,9 +58,13 @@ const progressPercentage = computed(() => {
   if (props.fundingPercentage !== undefined) {
     return props.fundingPercentage;
   }
+  
+  if (props.loan) {
+    return props.loan.getFundingPercentage();
+  }
 
-  if (props.loanAmount === 0) return 0;
-  const percentage = (props.fundedAmount / props.loanAmount) * 100;
+  if (getLoanAmount.value === 0) return 0;
+  const percentage = (getFundedAmount.value / getLoanAmount.value) * 100;
   return Math.min(percentage, 100);
 });
 
@@ -41,12 +72,17 @@ const amountToGo = computed(() => {
   if (props.remainingAmount !== undefined) {
     return props.remainingAmount;
   }
-  return props.loanAmount - props.fundedAmount;
+  
+  if (props.loan) {
+    return props.loan.getRemainingAmount();
+  }
+  
+  return getLoanAmount.value - getFundedAmount.value;
 });
 
 const handleLend = (event: Event) => {
   event.stopPropagation();
-  alert(`Lending $${selectedAmount.value} to ${props.name}`);
+  alert(`Lending $${selectedAmount.value} to ${getName.value}`);
 };
 
 const handleDropdownClick = (event: Event) => {
@@ -58,9 +94,9 @@ const handleDropdownClick = (event: Event) => {
   <div class="kiva-style-card" @click="handleClick" role="button" tabindex="0" @keydown.enter="handleClick">
     <div class="loan-image-container">
       <KivaImage 
-        :contentfulSrc="imageUrl" 
-        :alt="name" 
-        :ariaLabel="name" 
+        :contentfulSrc="getImageUrl" 
+        :alt="getName" 
+        :ariaLabel="getName" 
         width="480"
         height="300"
         class="loan-image" 
@@ -68,21 +104,21 @@ const handleDropdownClick = (event: Event) => {
       />
 
       <!-- Location badge -->
-      <KivaBadge v-if="location" class="location-badge" size="small">
-        <span class="location-icon">📍</span> {{ location }}
+      <KivaBadge v-if="getLocation" class="location-badge" size="small">
+        <span class="location-icon">📍</span> {{ getLocation }}
       </KivaBadge>
     </div>
 
     <div class="loan-container">
       <!-- Loan purpose -->
       <KivaText variant="h3" size="lg" weight="medium" class="loan-purpose">
-        ${{ loanAmount }} helps {{ name }} {{ whySpecial }}
+        ${{ getLoanAmount }} helps {{ getName }} {{ getWhySpecial }}
       </KivaText>
 
       <!-- Categories -->
-      <div class="categories" v-if="categories && categories.length > 0">
+      <div class="categories" v-if="getCategories && getCategories.length > 0">
         <KivaBadge 
-          v-for="(category, index) in categories" 
+          v-for="(category, index) in getCategories" 
           :key="index" 
           size="small" 
           class="category-tag"

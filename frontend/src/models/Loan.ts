@@ -35,18 +35,18 @@ export class Loan {
   constructor(data: GraphQLLoan) {
     this.id = data.id;
     this.name = data.name;
-    this.loanAmount = Number(data.loanAmount);
+    this.loanAmount = Number(data.loanAmount) || 0;
     this.loanFundraisingInfo = {
-      fundedAmount: Number(data.loanFundraisingInfo.fundedAmount),
+      fundedAmount: Number(data.loanFundraisingInfo?.fundedAmount) || 0,
     };
     this.image = {
-      url: data.image.url,
+      url: data.image.url || '',
     };
-    this.whySpecial = data.whySpecial;
-    this.description = data.description;
-    this.status = data.status;
-    this.borrowers = data.borrowers;
-    this.geocode = data.geocode;
+    this.whySpecial = data.whySpecial || '';
+    this.description = data.description || '';
+    this.status = data.status || '';
+    this.borrowers = data.borrowers || [];
+    this.geocode = data.geocode || { country: { name: '' } };
     this.themes = [];
   }
 
