@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { onMounted } from 'vue';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
+import ErrorMessage from '../molecule/ErrorMessage.vue';
 import { useLoan } from '@/composables/useLoan';
 
 /**
@@ -14,7 +14,7 @@ import { useLoan } from '@/composables/useLoan';
  * - Shows empty state when no loans are found
  */
 
-const { loans, loadLoans, loadingLoans: loading } = useLoan();
+const { loans, loadLoans, loadingLoans: loading, error, errorMessage, retry } = useLoan();
 
 /**
  * Fetch loans on component mount
@@ -39,6 +39,15 @@ const handleLoanClick = (loanId: number) => {
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="error-container">
+      <ErrorMessage 
+        :message="errorMessage" 
+        :retry-enabled="true"
+        @retry="retry" 
+      />
     </div>
 
     <!-- Empty state -->
@@ -117,7 +126,8 @@ const handleLoanClick = (loanId: number) => {
 
 /* Loading and empty state styles */
 .loading-container,
-.no-loans-container {
+.no-loans-container,
+.error-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -142,5 +152,10 @@ const handleLoanClick = (loanId: number) => {
 
 .kiva-style-grid-item {
   height: 100%;
+}
+
+.no-loans-text {
+  color: #6b7280;
+  font-size: 1rem;
 }
 </style>
