@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Simplificamos el mock para evitar errores de tipo
-vi.mock('vue', () => {
+// Ahora incluimos defineComponent en el mock de Vue
+vi.mock('vue', async () => {
   const mockApp = {
     use: vi.fn().mockReturnThis(),
     mount: vi.fn(),
   };
   return {
     createApp: vi.fn(() => mockApp),
+    defineComponent: (component: Record<string, any>) => component,
   };
 });
 
