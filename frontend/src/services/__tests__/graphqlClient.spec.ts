@@ -1,29 +1,38 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fetchGraphQL } from '../graphqlClient';
+import { NetworkError, DataFormatError } from '../errors/apiErrors';
 
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
+// Mock fetch globally
+global.fetch = vi.fn();
 
-vi.mock('../graphqlClient', () => {
-  return {
-    fetchGraphQL: vi.fn(),
-  };
-});
-
-describe('GraphQL Client', () => {
+describe('graphqlClient', () => {
   beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should make a POST request to the GraphQL endpoint', async () => {
+  it('should make a POST request to the GraphQL endpoint and return data', async () => {
     const mockResponse = {
       ok: true,
-      json: async () => ({ data: { test: 'data' } }),
+      json: () => Promise.resolve({
+        data: { test: 'success' }
+      })
     };
-    mockFetch.mockResolvedValue(mockResponse);
+    
+    vi.mocked(global.fetch).mockResolvedValueOnce(mockResponse);
 
-    vi.mocked(fetchGraphQL).mockImplementation(async (query, variables) => {
-      const response = await fetch('https://marketplace-api.k1.kiva.org/graphql', {
+    const query = 'query { test }';
+    const variables = { id: '123' };
+    
+    const result = await fetchGraphQL(query, variables);
+    
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,94 +41,99 @@ describe('GraphQL Client', () => {
           query,
           variables,
         }),
-      });
-      
-      const result = await response.json();
-      return result.data;
-    });
-
-    const query = 'query { test }';
-    const variables = { id: 123 };
-
-    const result = await fetchGraphQL(query, variables);
-
-    expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/graphql/), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    });
-    expect(result).toEqual({ test: 'data' });
+      }
+    );
+    
+    expect(result).toEqual({ test: 'success' });
   });
 
-  it('should throw an error if the response is not OK', async () => {
+  it('should throw NetworkError when response is not OK', async () => {
+    const errorText = 'Server error';
     const mockResponse = {
       ok: false,
       status: 500,
       statusText: 'Internal Server Error',
-      text: async () => 'Server error',
+      text: () => Promise.resolve(errorText)
     };
-    mockFetch.mockResolvedValue(mockResponse);
-
-    vi.mocked(fetchGraphQL).mockImplementation(async () => {
-      throw new Error('GraphQL request failed: 500 Internal Server Error');
-    });
+    
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse);
 
     const query = 'query { test }';
-
-    await expect(fetchGraphQL(query)).rejects.toThrow(
-      'GraphQL request failed: 500 Internal Server Error'
-    );
+    
+    try {
+      await fetchGraphQL(query);
+      // Si llegamos aquí, la prueba debe fallar porque esperamos una excepción
+      expect('This should not be reached').toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(NetworkError);
+      expect(error.message).toContain('GraphQL request failed: 500 Internal Server Error');
+      expect(error.message).toContain(errorText);
+    }
   });
 
-  it('should throw an error if the response contains GraphQL errors', async () => {
+  it('should throw DataFormatError when response contains GraphQL errors', async () => {
+    const graphqlErrors = [
+      { message: 'Field "test" not found', path: ['test'] }
+    ];
+    
     const mockResponse = {
       ok: true,
-      json: async () => ({
-        data: null,
-        errors: [{ message: 'Field "test" not found' }, { message: 'Invalid syntax' }],
-      }),
+      json: () => Promise.resolve({
+        data: { partial: 'data' },
+        errors: graphqlErrors
+      })
     };
-    mockFetch.mockResolvedValue(mockResponse);
-
-    vi.mocked(fetchGraphQL).mockImplementation(async () => {
-      throw new Error('GraphQL errors: Field "test" not found, Invalid syntax');
-    });
+    
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse);
 
     const query = 'query { test }';
-
-    await expect(fetchGraphQL(query)).rejects.toThrow(
-      'GraphQL errors: Field "test" not found, Invalid syntax'
-    );
+    
+    try {
+      await fetchGraphQL(query);
+      // Si llegamos aquí, la prueba debe fallar porque esperamos una excepción
+      expect('This should not be reached').toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(DataFormatError);
+      expect(error.message).toContain('GraphQL errors: Field "test" not found');
+    }
   });
 
-  it('should use the GraphQL API URL when making requests', async () => {
+  it('should handle fetch network errors', async () => {
+    const networkError = new Error('Network failure');
+    vi.mocked(global.fetch).mockRejectedValue(networkError);
+
+    const query = 'query { test }';
+    
+    try {
+      await fetchGraphQL(query);
+      // Si llegamos aquí, la prueba debe fallar porque esperamos una excepción
+      expect('This should not be reached').toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(NetworkError);
+      expect(error.message).toContain('GraphQL client error: Network failure');
+    }
+  });
+
+  it('should handle error when getting error details fails', async () => {
     const mockResponse = {
-      ok: true,
-      json: async () => ({ data: { test: 'data' } }),
+      ok: false,
+      status: 500,
+      statusText: 'Internal Server Error',
+      text: () => Promise.reject(new Error('Cannot read response'))
     };
-    mockFetch.mockResolvedValue(mockResponse);
+    
+    vi.mocked(global.fetch).mockResolvedValue(mockResponse);
 
-    vi.mocked(fetchGraphQL).mockImplementation(async (query) => {
-      await fetch('https://marketplace-api.k1.kiva.org/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
-      return { test: 'data' };
-    });
-
-    await fetchGraphQL('query { test }');
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringMatching(/^https:\/\/.*\/graphql$/),
-      expect.anything()
-    );
+    const query = 'query { test }';
+    
+    try {
+      await fetchGraphQL(query);
+      // Si llegamos aquí, la prueba debe fallar porque esperamos una excepción
+      expect('This should not be reached').toBe(false);
+    } catch (error) {
+      expect(error).toBeInstanceOf(NetworkError);
+      expect(error.message).toContain('GraphQL request failed: 500 Internal Server Error');
+      expect(error.message).toContain('Could not get error details');
+    }
   });
 });

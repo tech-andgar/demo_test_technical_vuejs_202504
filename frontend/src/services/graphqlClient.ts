@@ -36,9 +36,6 @@ export async function fetchGraphQL<T>(
   variables: Record<string, any> = {}
 ): Promise<T> {
   try {
-    // Log para depuración
-    console.log('GraphQL Request:', { query, variables });
-    
     const response = await fetch(KIVA_API_URL, {
       method: 'POST',
       headers: {
@@ -51,23 +48,19 @@ export async function fetchGraphQL<T>(
     });
 
     if (!response.ok) {
-      // Intentar obtener más información sobre el error
+      // Try to get more information about the error
       let errorDetails = '';
       try {
         const errorText = await response.text();
         errorDetails = errorText;
-        console.error('GraphQL Error Response:', errorText);
-      } catch (e) {
-        errorDetails = 'No se pudo obtener detalles del error';
+      } catch {
+        errorDetails = 'Could not get error details';
       }
       
       throw new NetworkError(`GraphQL request failed: ${response.status} ${response.statusText} - ${errorDetails}`);
     }
 
     const result = (await response.json()) as GraphQLResponse<T>;
-    
-    // Log para depuración
-    console.log('GraphQL Response:', result);
 
     if (result.errors && result.errors.length) {
       throw new DataFormatError(
@@ -78,9 +71,6 @@ export async function fetchGraphQL<T>(
 
     return result.data;
   } catch (error) {
-    // Log para depuración
-    console.error('GraphQL Client Error:', error);
-    
     if (error instanceof NetworkError || error instanceof DataFormatError) {
       throw error;
     }
