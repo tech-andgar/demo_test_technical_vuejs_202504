@@ -2,29 +2,27 @@
 
 This directory contains GitHub Actions workflow configurations for automated testing and deployment.
 
-## Workflows
+## Workflow: `deploy.yml`
 
-### `test.yml`
+This workflow executes a complete CI/CD process that includes testing, building, and deploying to GitHub Pages when changes are pushed to the `main` branch.
 
-This workflow runs automatically on pushes to the `main` branch and on all pull requests to ensure the code quality and functionality.
+The workflow follows these steps in sequence:
 
-Actions:
+### 1. Testing Phase
 - Uses pnpm for faster dependency management
-- Caches test results for improved performance
+- Implements test results caching for better performance
 - Installs dependencies
 - Runs unit tests
 - Performs type checking
 
-### `deploy.yml`
-
-This workflow builds and deploys the frontend to GitHub Pages when changes are pushed to the `main` branch.
-
-Actions:
+### 2. Build and Deploy Phase
+- Only runs if all tests pass
+- Automatically extracts the repository name to use as the base path
 - Uses pnpm for faster dependency management
-- Implements build caching for faster deployments
+- Dynamically updates the Vite configuration with the current repository name
+- Implements build artifact caching for faster deployments
 - Builds the frontend application
-- Configures GitHub Pages
-- Deploys the built application to GitHub Pages
+- Deploys the built files to the `gh-pages` branch using the JamesIves/github-pages-deploy-action
 
 ## Performance Optimizations
 
@@ -34,13 +32,17 @@ Actions:
   - Build artifacts
   - Test results
 - Hash-based cache keys ensure proper cache invalidation when source files change
+- Sequential pipeline design prevents building code that fails tests
+- **Automatic configuration** adapts the base path to the current repository name
 
-## Setting Up GitHub Pages
+## GitHub Pages Setup
 
-To finish setting up GitHub Pages deployment:
+To finalize the GitHub Pages deployment setup:
 
 1. Go to your repository settings
 2. Navigate to the "Pages" section
-3. Under "Build and deployment" > "Source", select "GitHub Actions"
+3. Under "Build and deployment" > "Source", select "Deploy from a branch"
+4. In "Branch", select the `gh-pages` branch and the root folder (/)
+5. Click "Save"
 
-The deployed application will be available at: `https://{username}.github.io/full-stack-challenge/` 
+The deployed application will be available at: `https://{username}.github.io/{repository-name}/` 
