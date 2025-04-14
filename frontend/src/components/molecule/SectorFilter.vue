@@ -56,12 +56,11 @@ const toggleSector = (sectorId: number) => {
   } else {
     selectedOptions.value.push(sectorId);
   }
-  
-  emit('update:selectedSectors', selectedOptions.value);
 };
 
 // Aplica el filtro actual
 const applyFilter = () => {
+  emit('update:selectedSectors', selectedOptions.value);
   emit('filter', selectedOptions.value);
   isOpen.value = false;
 };
@@ -71,6 +70,7 @@ const clearFilter = () => {
   selectedOptions.value = [];
   emit('update:selectedSectors', []);
   emit('filter', []);
+  isOpen.value = false;
 };
 
 // Determina si un sector está seleccionado

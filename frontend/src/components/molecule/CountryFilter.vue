@@ -81,7 +81,6 @@ const toggleCountry = (country: Country) => {
     selectedOptions.value.splice(index, 1);
   }
   console.log('Selected countries:', selectedOptions.value);
-  applyFilters();
 };
 
 // Apply filters
@@ -89,6 +88,7 @@ const applyFilters = () => {
   console.log('Applying country filters:', selectedOptions.value);
   emit('update:selectedCountries', selectedOptions.value);
   emit('filter', selectedOptions.value);
+  isOpen.value = false;
 };
 
 // Clear filters
@@ -97,6 +97,7 @@ const clearFilters = () => {
   selectedOptions.value = [];
   emit('update:selectedCountries', []);
   emit('filter', []);
+  isOpen.value = false;
 };
 
 // Determina si un país está seleccionado
@@ -139,14 +140,14 @@ const isSelected = (countryName: string): boolean => {
           :key="country.name"
           @click="toggleCountry(country)"
           class="country-item"
-          :class="{ 'selected': isSelected(country.name) }"
+          :class="{ 'selected': isSelected(country.isoCode || '') }"
         >
           <div class="checkbox">
-            <span v-if="isSelected(country.name)" class="checkmark">✓</span>
+            <span v-if="isSelected(country.isoCode || '')" class="checkmark">✓</span>
           </div>
           <span class="country-name">{{ country.name }}</span>
-          <span v-if="props.showCount && props.activeLoanCounts[country.isoCode || '']" class="country-count">
-            ({{ props.activeLoanCounts[country.isoCode || ''] }})
+          <span v-if="props.showCount && country.count" class="country-count">
+            ({{ country.count }})
           </span>
         </div>
       </div>

@@ -43,43 +43,46 @@ const { availableSectors, loadFilterOptions, loadingFilters } = useLoan();
 const currentFilters = ref<LoanFilters>(props.filters || {});
 const isPanelOpen = ref(false);
 
-// Sectores seleccionados (array para multiselección)
-const selectedSectors = ref<number[]>([]);
-// Países seleccionados
-const selectedCountries = ref<string[]>([]);
+// Estado temporal para mantener las selecciones antes de aplicar
+const tempFilters = ref<{sectors: number[], countries: string[]}>({
+  sectors: [],
+  countries: []
+});
 
 // Inicializar selecciones basadas en los filtros iniciales
 if (props.filters?.sectors) {
-  selectedSectors.value = [...props.filters.sectors];
+  tempFilters.value.sectors = [...props.filters.sectors];
 }
 
 if (props.filters?.countries) {
-  selectedCountries.value = [...props.filters.countries];
+  tempFilters.value.countries = [...props.filters.countries];
 }
 
-// Actualiza el filtro de sectores
-const updateSectorFilters = () => {
-  console.log('Actualizando filtros de sectores:', selectedSectors.value);
-  const newFilters = { ...currentFilters.value };
-  if (selectedSectors.value.length > 0) {
-    newFilters.sectors = selectedSectors.value;
-  } else {
-    delete newFilters.sectors;
-  }
-  currentFilters.value = newFilters;
-  emit('update:filters', newFilters);
-  emit('filter', newFilters);
+// Actualiza la selección temporal de sectores
+const handleSectorSelection = (sectors: number[]) => {
+  console.log('Actualizando selección temporal de sectores:', sectors);
+  tempFilters.value.sectors = sectors;
 };
 
-// Actualiza el filtro de países
-const updateCountryFilters = () => {
-  console.log('Actualizando filtros de países:', selectedCountries.value);
-  const newFilters = { ...currentFilters.value };
-  if (selectedCountries.value.length > 0) {
-    newFilters.countries = selectedCountries.value;
-  } else {
-    delete newFilters.countries;
+// Actualiza la selección temporal de países
+const handleCountrySelection = (countries: string[]) => {
+  console.log('Actualizando selección temporal de países:', countries);
+  tempFilters.value.countries = countries;
+};
+
+// Aplica los filtros cuando se presiona Apply en cualquier filtro
+const applyFilters = () => {
+  console.log('Aplicando filtros');
+  const newFilters: LoanFilters = {};
+  
+  if (tempFilters.value.sectors.length > 0) {
+    newFilters.sectors = [...tempFilters.value.sectors];
   }
+  
+  if (tempFilters.value.countries.length > 0) {
+    newFilters.countries = [...tempFilters.value.countries];
+  }
+  
   currentFilters.value = newFilters;
   emit('update:filters', newFilters);
   emit('filter', newFilters);
@@ -88,8 +91,7 @@ const updateCountryFilters = () => {
 // Limpia todos los filtros
 const clearAllFilters = () => {
   console.log('Limpiando todos los filtros');
-  selectedSectors.value = [];
-  selectedCountries.value = [];
+  tempFilters.value = { sectors: [], countries: [] };
   currentFilters.value = {};
   emit('update:filters', {});
   emit('filter', {});
@@ -115,7 +117,7 @@ const toggleFilterPanel = () => {
       <div class="filter-header-desktop">
         <KivaText variant="h4" size="lg">{{ title }}</KivaText>
         <button 
-          v-if="selectedSectors.length > 0 || selectedCountries.length > 0"
+          v-if="tempFilters.sectors.length > 0 || tempFilters.countries.length > 0"
           class="clear-all-btn" 
           @click="clearAllFilters"
         >
@@ -131,9 +133,9 @@ const toggleFilterPanel = () => {
       <!-- Secciones de filtros -->
       <div class="filter-section">
         <SectorFilter
-          :selected-sectors="selectedSectors"
-          @update:selected-sectors="selectedSectors = $event"
-          @filter="updateSectorFilters"
+          :selected-sectors="tempFilters.sectors"
+          @update:selected-sectors="handleSectorSelection"
+          @filter="applyFilters"
           placeholder="Sector"
         />
       </div>
@@ -141,9 +143,9 @@ const toggleFilterPanel = () => {
       <!-- Filtro de países -->
       <div class="filter-section">
         <CountryFilter
-          :selected-countries="selectedCountries"
-          @update:selected-countries="selectedCountries = $event"
-          @filter="updateCountryFilters"
+          :selected-countries="tempFilters.countries"
+          @update:selected-countries="handleCountrySelection"
+          @filter="applyFilters"
           placeholder="País"
           :active-loan-counts="activeLoanCounts"
         />
