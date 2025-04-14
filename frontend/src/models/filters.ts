@@ -4,7 +4,7 @@
 export interface LoanFilters {
   searchTerm?: string;
   sector?: number | number[];
-  country?: string;
+  country?: string | string[];
   sortBy?: string;
   gender?: string;         // 'female', 'male', 'nonbinary', etc.
   status?: string;         // 'fundraising', 'funded', etc.
@@ -46,8 +46,12 @@ export const generateFilterVariables = (filters?: LoanFilters) => {
   }
   
   if (filters.country) {
-    // Por ahora no podemos filtrar por país usando la API
-    console.log('Filtrado por país no disponible en la API actual:', filters.country);
+    // Convertir el filtro de país a un array de códigos ISO
+    if (typeof filters.country === 'string') {
+      variables.countries = [filters.country];
+    } else if (Array.isArray(filters.country) && filters.country.length > 0) {
+      variables.countries = filters.country;
+    }
   }
   
   if (filters.gender) {

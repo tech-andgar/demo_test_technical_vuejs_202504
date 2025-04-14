@@ -25,6 +25,7 @@ export class Loan {
   geocode?: {
     country: {
       name: string;
+      isoCode?: string;
     };
   };
   themes?: string[];

@@ -3,9 +3,9 @@
  * Corregida basada en los errores recibidos de la API
  */
 export const GET_LOANS_QUERY = `
-  query GetLoans($limit: Int!, $offset: Int!) {
+  query GetLoans($limit: Int!, $offset: Int!, $countries: [String!], $sectors: [Int!]) {
     lend {
-      loans(limit: $limit, offset: $offset) {
+      loans(limit: $limit, offset: $offset, filters: { country: $countries, sector: $sectors }) {
         totalCount
         values {
           id
@@ -25,6 +25,7 @@ export const GET_LOANS_QUERY = `
           geocode {
             country {
               name
+              isoCode
             }
           }
           sector {
@@ -41,9 +42,9 @@ export const GET_LOANS_QUERY = `
  * GraphQL query to fetch a list of loans filtered by sector
  */
 export const GET_LOANS_BY_SECTOR_QUERY = `
-  query GetLoansBySector($limit: Int!, $offset: Int!, $sectors: [Int!]!) {
+  query GetLoansBySector($limit: Int!, $offset: Int!, $sectors: [Int!]!, $countries: [String!]) {
     lend {
-      loans(limit: $limit, offset: $offset, filters: { sector: $sectors }) {
+      loans(limit: $limit, offset: $offset, filters: { sector: $sectors, country: $countries }) {
         totalCount
         values {
           id
@@ -63,6 +64,7 @@ export const GET_LOANS_BY_SECTOR_QUERY = `
           geocode {
             country {
               name
+              isoCode
             }
           }
           sector {
@@ -101,7 +103,12 @@ export const GET_LOAN_BY_ID_QUERY = `
         geocode {
           country {
             name
+            isoCode
           }
+        }
+        sector {
+          id
+          name
         }
       }
     }
@@ -122,11 +129,17 @@ export const GET_FILTER_OPTIONS_QUERY = `
         }
         count
       }
-      loans(limit: 100) {
+      loans(limit: 1000) {
         values {
           sector {
             id
             name
+          }
+          geocode {
+            country {
+              name
+              isoCode
+            }
           }
         }
       }

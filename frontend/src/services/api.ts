@@ -6,7 +6,6 @@ import { normalizeLoan } from './mapper/loan';
 import { DataFormatError, handleApiError } from './errors/apiErrors';
 import {
   GET_LOANS_QUERY,
-  GET_LOANS_BY_SECTOR_QUERY,
   GET_LOAN_BY_ID_QUERY,
   GET_FILTER_OPTIONS_QUERY,
 } from './graphql/loanQueries';
@@ -28,19 +27,8 @@ export const fetchLoans = async (
   try {
     const filterVariables = generateFilterVariables(filters);
     const variables = { limit, offset, ...filterVariables };
-    
-    console.log('Fetching loans with filters:', JSON.stringify(filters), 'Variables:', JSON.stringify(variables));
 
-    // Usar la consulta adecuada basada en si hay sectores seleccionados
-    let data;
-    if ('sectors' in variables && variables.sectors !== undefined && 
-        Array.isArray(variables.sectors) && variables.sectors.length > 0) {
-      // Usar la consulta con filtro de sectores
-      data = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_BY_SECTOR_QUERY, variables);
-    } else {
-      // Usar la consulta sin filtro de sector
-      data = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_QUERY, variables);
-    }
+    const data = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_QUERY, variables);
 
     if (!data?.lend?.loans?.values) {
       throw new DataFormatError('Invalid response format from API', data);
@@ -48,8 +36,6 @@ export const fetchLoans = async (
 
     const loans = data.lend.loans.values.map(normalizeLoan);
     const totalCount = data.lend.loans.totalCount || 0;
-    
-    console.log(`Fetched ${loans.length} loans out of ${totalCount} total`);
 
     return { loans, totalCount };
   } catch (error) {
@@ -112,7 +98,7 @@ export const fetchFilterOptions = async (): Promise<FilterOptionsResponse> => {
       ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
     
     return {
-      countries: countries,
+      countries,
       sectors: sectors.length ? sectors : [
         { name: 'Agriculture', id: 1 },
         { name: 'Services', id: 4 },
@@ -126,30 +112,6 @@ export const fetchFilterOptions = async (): Promise<FilterOptionsResponse> => {
     };
   } catch (error) {
     console.error('Error fetching filter options:', error);
-    // En caso de error, devolver datos estáticos como fallback
-    return {
-      countries: [
-        { name: 'Philippines', isoCode: 'PH', count: 1212 },
-        { name: 'Kenya', isoCode: 'KE', count: 953 },
-        { name: 'Uganda', isoCode: 'UG', count: 489 },
-        { name: 'Tajikistan', isoCode: 'TJ', count: 455 },
-        { name: 'Ecuador', isoCode: 'EC', count: 405 },
-        { name: 'El Salvador', isoCode: 'SV', count: 313 },
-        { name: 'Vietnam', isoCode: 'VN', count: 311 },
-        { name: 'Nicaragua', isoCode: 'NI', count: 309 },
-        { name: 'Senegal', isoCode: 'SN', count: 297 },
-        { name: 'Colombia', isoCode: 'CO', count: 215 }
-      ],
-      sectors: [
-        { name: 'Agriculture', id: 1 },
-        { name: 'Services', id: 4 },
-        { name: 'Clothing', id: 5 },
-        { name: 'Health', id: 6 },
-        { name: 'Retail', id: 7 },
-        { name: 'Housing', id: 10 },
-        { name: 'Food', id: 12 },
-        { name: 'Education', id: 15 }
-      ]
-    };
+    throw error; // Propagar el error en lugar de devolver datos estáticos
   }
 };

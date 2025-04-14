@@ -78,6 +78,7 @@ export interface GraphQLLoan {
   geocode?: {
     country: {
       name: string;
+      isoCode?: string;
     };
   };
   sector?: {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { KivaText } from '../atoms';
+import SectorFilter from './SectorFilter.vue';
+import CountryFilter from './CountryFilter.vue';
 import type { LoanFilters } from '@/models/filters';
 import { useLoan } from '@/composables/useLoan';
 
@@ -16,11 +18,14 @@ interface Props {
   filters?: LoanFilters;
   /** Título del panel de filtros */
   title?: string;
+  /** Contador de préstamos activos por país */
+  activeLoanCounts?: Record<string, number>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   filters: () => ({}),
-  title: 'Filter Results'
+  title: 'Filter Results',
+  activeLoanCounts: () => ({})
 });
 
 // Emits
@@ -40,6 +45,8 @@ const isPanelOpen = ref(false);
 
 // Sectores seleccionados (array para multiselección)
 const selectedSectors = ref<number[]>([]);
+// Países seleccionados
+const selectedCountries = ref<string[]>([]);
 
 // Inicializar selecciones basadas en los filtros iniciales
 if (props.filters?.sector) {
@@ -50,18 +57,26 @@ if (props.filters?.sector) {
   }
 }
 
+if (props.filters?.country) {
+  if (typeof props.filters.country === 'string') {
+    selectedCountries.value = [props.filters.country];
+  } else if (Array.isArray(props.filters.country)) {
+    selectedCountries.value = [...props.filters.country];
+  }
+}
+
 // Actualiza el filtro de sectores
-const updateSectorFilters = () => {
-  console.log('Actualizando filtros con sectores IDs:', selectedSectors.value);
+const updateSectorFilters = (sectors: number[]) => {
+  console.log('Actualizando filtros con sectores IDs:', sectors);
   
   // Si no hay sectores seleccionados, establecer sector como undefined
   // Si hay un solo sector, establecer como número
   // Si hay múltiples sectores, establecer como array
-  const sectorValue = selectedSectors.value.length === 0 
+  const sectorValue = sectors.length === 0 
     ? undefined 
-    : selectedSectors.value.length === 1 
-      ? selectedSectors.value[0] 
-      : selectedSectors.value;
+    : sectors.length === 1 
+      ? sectors[0] 
+      : sectors;
   
   currentFilters.value = {
     ...currentFilters.value,
@@ -72,10 +87,33 @@ const updateSectorFilters = () => {
   emit('filter', currentFilters.value);
 };
 
+// Actualiza el filtro de países
+const updateCountryFilters = (countries: string[]) => {
+  console.log('Actualizando filtros con países:', countries);
+  
+  // Si no hay países seleccionados, establecer country como undefined
+  // Si hay un solo país, establecer como string
+  // Si hay múltiples países, establecer como array
+  const countryValue = countries.length === 0 
+    ? undefined 
+    : countries.length === 1 
+      ? countries[0] 
+      : countries;
+  
+  currentFilters.value = {
+    ...currentFilters.value,
+    country: countryValue
+  };
+  
+  emit('update:filters', currentFilters.value);
+  emit('filter', currentFilters.value);
+};
+
 // Limpia todos los filtros
 const clearAllFilters = () => {
   // Vaciar el array de sectores seleccionados primero
   selectedSectors.value = [];
+  selectedCountries.value = [];
   
   // Crear un nuevo objeto vacío para los filtros
   currentFilters.value = {};
@@ -91,24 +129,6 @@ const clearAllFilters = () => {
 // Alterna la visibilidad del panel de filtros en móvil
 const toggleFilterPanel = () => {
   isPanelOpen.value = !isPanelOpen.value;
-};
-
-// Alterna la selección de un sector
-const toggleSector = (sectorId: number) => {
-  const index = selectedSectors.value.indexOf(sectorId);
-  if (index === -1) {
-    // Si no está seleccionado, agregarlo
-    selectedSectors.value.push(sectorId);
-  } else {
-    // Si ya está seleccionado, quitarlo
-    selectedSectors.value.splice(index, 1);
-  }
-  updateSectorFilters();
-};
-
-// Verifica si un sector está seleccionado
-const isSectorSelected = (sectorId: number): boolean => {
-  return selectedSectors.value.includes(sectorId);
 };
 </script>
 
@@ -126,7 +146,7 @@ const isSectorSelected = (sectorId: number): boolean => {
       <div class="filter-header-desktop">
         <KivaText variant="h4" size="lg">{{ title }}</KivaText>
         <button 
-          v-if="selectedSectors.length > 0"
+          v-if="selectedSectors.length > 0 || selectedCountries.length > 0"
           class="clear-all-btn" 
           @click="clearAllFilters"
         >
@@ -140,35 +160,24 @@ const isSectorSelected = (sectorId: number): boolean => {
       </div>
       
       <!-- Secciones de filtros -->
-      <div class="filter-section" v-if="!loadingFilters">
-        <KivaText variant="h6" size="md" class="section-title">
-          Sector 
-          <span v-if="selectedSectors.length > 0" class="selection-count">
-            ({{ selectedSectors.length }} selected)
-          </span>
-        </KivaText>
-        
-        <div class="sector-list">
-          <div 
-            v-for="sector in availableSectors" 
-            :key="sector.id"
-            class="sector-item"
-            :class="{ 'selected': isSectorSelected(sector.id!) }"
-            @click="toggleSector(sector.id!)"
-          >
-            <div class="checkbox">
-              <span v-if="isSectorSelected(sector.id!)" class="checkmark">✓</span>
-            </div>
-            <span class="sector-name">{{ sector.name }}</span>
-          </div>
-        </div>
+      <div class="filter-section">
+        <SectorFilter
+          :selected-sectors="selectedSectors"
+          @update:selected-sectors="selectedSectors = $event"
+          @filter="updateSectorFilters"
+          placeholder="Sector"
+        />
       </div>
       
-      <!-- Mensaje de limitación -->
-      <div class="filter-note">
-        <KivaText size="xs" color="muted">
-          Note: Country filtering is not available through the current API.
-        </KivaText>
+      <!-- Filtro de países -->
+      <div class="filter-section">
+        <CountryFilter
+          :selected-countries="selectedCountries"
+          @update:selected-countries="selectedCountries = $event"
+          @filter="updateCountryFilters"
+          placeholder="País"
+          :active-loan-counts="activeLoanCounts"
+        />
       </div>
     </div>
   </div>
@@ -225,9 +234,14 @@ const isSectorSelected = (sectorId: number): boolean => {
   margin-bottom: 1.5rem;
 }
 
-.section-title {
-  margin-bottom: 0.75rem;
-  color: #374151;
+.filter-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.disabled-note {
+  margin-bottom: 0.5rem;
+  font-style: italic;
 }
 
 .toggle-icon {

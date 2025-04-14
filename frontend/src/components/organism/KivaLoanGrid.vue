@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watchEffect } from 'vue';
-import { KivaLoanCard, KivaText, Spinner } from '@/components/atoms';
-import { FilterPanel } from '@/components/molecule';
-import { useLoan } from '@/composables/useLoan';
+import { KivaText, Spinner } from '../atoms';
+import FilterPanel from '../molecule/FilterPanel.vue';
+import KivaLoanCard from '../molecule/KivaLoanCard.vue';
 import type { LoanFilters } from '@/models/filters';
 import type { Loan } from '@/models/Loan';
+import { useLoan } from '@/composables/useLoan';
 
 /**
  * Grid component for displaying Kiva loans
@@ -42,7 +43,16 @@ const currentPage = ref(1);
 const isLoading = ref(true);
 
 // Composable de préstamos
-const { loans, totalCount, loadLoans, loadFilterOptions, availableSectors, loadingFilters } = useLoan();
+const { 
+  loans, 
+  totalCount, 
+  loadLoans, 
+  loadFilterOptions,
+  availableSectors,
+  loadingFilters,
+  loadingLoans,
+  availableCountries 
+} = useLoan();
 
 // Cargar datos al montar el componente
 onMounted(async () => {
@@ -115,6 +125,18 @@ const applyFilters = async (newFilters: LoanFilters) => {
   
   console.log('Préstamos filtrados cargados:', filters.value);
 };
+
+// Calcular contadores de préstamos activos por país
+const activeLoanCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  loans.value.forEach(loan => {
+    const isoCode = loan.geocode?.country?.isoCode;
+    if (isoCode) {
+      counts[isoCode] = (counts[isoCode] || 0) + 1;
+    }
+  });
+  return counts;
+});
 </script>
 
 <template>
@@ -132,6 +154,7 @@ const applyFilters = async (newFilters: LoanFilters) => {
         <FilterPanel
           v-model:filters="filters"
           @filter="applyFilters"
+          :active-loan-counts="activeLoanCounts"
         />
       </div>
       
