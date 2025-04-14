@@ -1,20 +1,13 @@
-import type { Loan, GraphQLLoan } from '../interfaces';
+import type { GraphQLLoan } from '../interfaces';
+import { Loan } from '@/models/Loan';
 
 /**
- * Converts a GraphQL loan object to a normalized Loan model
- *
- * @param loan - Raw GraphQL loan object from the API
- * @returns Normalized loan object with proper type conversions
- * @throws Error if the loan parameter is null or undefined
+ * Converts a GraphQL loan response to a Loan object
+ * @param loanData Raw GraphQL loan data
+ * @returns Loan instance with correctly typed and formatted data
  */
-export const normalizeLoan = (loan: GraphQLLoan): Loan => {
-  if (!loan) throw new Error('Cannot normalize null or undefined loan');
+export const normalizeLoan = (loanData: GraphQLLoan): Loan => {
+  if (!loanData) throw new Error('Cannot normalize null or undefined loan');
 
-  return {
-    ...loan,
-    loanAmount: Number(loan.loanAmount),
-    loanFundraisingInfo: {
-      fundedAmount: Number(loan.loanFundraisingInfo.fundedAmount),
-    },
-  };
+  return new Loan(loanData);
 };

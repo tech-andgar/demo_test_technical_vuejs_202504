@@ -14,7 +14,6 @@ import { useLoan } from '@/composables/useLoan';
  * - Shows empty state when no loans are found
  */
 
-// Get loan data and methods from the composable
 const { loans, loadLoans, loadingLoans: loading } = useLoan();
 
 /**
@@ -59,13 +58,15 @@ const handleLoanClick = (loanId: number) => {
         :name="loan.name"
         :loanAmount="loan.loanAmount"
         :fundedAmount="loan.loanFundraisingInfo.fundedAmount"
+        :fundingPercentage="loan.getFundingPercentage()"
         :imageUrl="loan.image.url"
-        :whySpecial="loan.whySpecial"
-        :location="loan.geocode?.country?.name || ''"
-        :categories="[]"
+        :whySpecial="loan.getShortDescription(120)"
+        :location="loan.getCountryName()"
+        :remainingAmount="loan.getRemainingAmount()"
+        :isFullyFunded="loan.isFullyFunded()"
+        :categories="loan.themes || []"
         @click="handleLoanClick(loan.id)"
         />
-
       </div>
     </div>
   </div>

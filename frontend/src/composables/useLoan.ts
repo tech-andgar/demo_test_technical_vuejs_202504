@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { fetchLoans, fetchLoanById } from '@/services/api';
-import type { Loan } from '@/services/interfaces';
+import { Loan } from '@/models';
 
 /**
  * Composable for managing loan data and state

@@ -1,4 +1,4 @@
-import type { Loan } from './interfaces';
+import { Loan } from '@/models';
 import { fetchGraphQL } from './graphqlClient';
 import { normalizeLoan } from './mapper/loan';
 

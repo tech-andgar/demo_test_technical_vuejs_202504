@@ -6,9 +6,12 @@ const props = defineProps<{
   name: string;
   loanAmount: number;
   fundedAmount: number;
+  fundingPercentage?: number;
   imageUrl: string;
   whySpecial: string;
   location?: string;
+  remainingAmount?: number;
+  isFullyFunded?: boolean;
   categories?: string[];
 }>();
 
@@ -34,18 +37,24 @@ const handleClick = () => {
 };
 
 const progressPercentage = computed(() => {
+  if (props.fundingPercentage !== undefined) {
+    return props.fundingPercentage;
+  }
+
   if (props.loanAmount === 0) return 0;
   const percentage = (props.fundedAmount / props.loanAmount) * 100;
   return Math.min(percentage, 100);
 });
 
 const amountToGo = computed(() => {
+  if (props.remainingAmount !== undefined) {
+    return props.remainingAmount;
+  }
   return props.loanAmount - props.fundedAmount;
 });
 
 const handleLend = (event: Event) => {
   event.stopPropagation();
-  // Implementar la funcionalidad de préstamo aquí
   alert(`Lending $${selectedAmount.value} to ${props.name}`);
 };
 
@@ -60,49 +69,51 @@ const handleDropdownClick = (event: Event) => {
       <div class="image-loading" v-if="imageLoading" aria-hidden="true">
         <div class="loading-spinner" aria-hidden="true"></div>
       </div>
-      <img v-if="!imageError && props.imageUrl" :src="props.imageUrl" :alt="props.name" class="loan-image" 
+      <img v-if="!imageError && props.imageUrl" :src="props.imageUrl" :alt="props.name" class="loan-image"
         @error="handleImageError" @load="handleImageLoad" :class="{ 'hidden': imageLoading }" loading="lazy" />
       <div v-if="imageError || !props.imageUrl" class="loan-placeholder" role="img"
         :aria-label="`${props.name} Placeholder for loan image`">
         <span>{{ props.name.charAt(0) || 'L' }}</span>
       </div>
-      
+
       <!-- Location badge -->
       <div v-if="props.location" class="location-badge">
         <span class="location-icon">📍</span> {{ props.location }}
       </div>
     </div>
-    
+
     <div class="loan-container">
       <!-- Loan purpose -->
       <h3 class="loan-purpose">${{ props.loanAmount }} helps {{ props.name }} {{ props.whySpecial }}</h3>
-      
+
       <!-- Categories -->
       <div class="categories" v-if="props.categories && props.categories.length > 0">
         <span v-for="(category, index) in props.categories" :key="index" class="category-tag">
           {{ category }}
         </span>
       </div>
-      
+
       <!-- Action row -->
       <div class="action-row">
         <div class="progress-column">
           <div class="amount-to-go">${{ amountToGo }} to go</div>
-          <div class="loan-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progressPercentage">
+          <div class="loan-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+            :aria-valuenow="progressPercentage">
             <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
           </div>
         </div>
-        
+
         <div class="action-column" @click.stop>
           <div class="amount-selector">
-            <select v-model="selectedAmount" class="amount-dropdown" @click="handleDropdownClick" @change="handleDropdownClick">
+            <select v-model="selectedAmount" class="amount-dropdown" @click="handleDropdownClick"
+              @change="handleDropdownClick">
               <option value="25">$25</option>
               <option value="50">$50</option>
               <option value="100">$100</option>
               <option value="200">$200</option>
             </select>
           </div>
-          
+
           <button class="lend-button" @click="handleLend">Lend</button>
         </div>
       </div>
@@ -282,8 +293,13 @@ const handleDropdownClick = (event: Event) => {
 }
 
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .hidden {
