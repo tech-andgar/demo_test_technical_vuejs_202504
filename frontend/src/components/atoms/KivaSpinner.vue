@@ -30,7 +30,7 @@ const pixelSize = sizeMap[props.size] || sizeMap.md;
 </script>
 
 <template>
-  <div class="spinner-container" :style="{ width: `${pixelSize}px`, height: `${pixelSize}px` }">
+  <div class="spinner-container" role="status" aria-label="Loading" :style="{ width: `${pixelSize}px`, height: `${pixelSize}px` }">
     <div class="spinner" :style="{ borderTopColor: props.color }"></div>
   </div>
 </template>
