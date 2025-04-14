@@ -18,6 +18,8 @@ concurrency:
 jobs:
   setup:
     runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.repo-name.outputs.REPO_NAME }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -47,12 +49,6 @@ jobs:
       with:
         path: frontend/node_modules
         key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
-
-    - name: Upload repository name
-      uses: actions/upload-artifact@v3
-      with:
-        name: repo-name
-        path: ${{ github.output_path }}
 
   test:
     needs: setup
@@ -102,16 +98,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Download repository name
-      uses: actions/download-artifact@v3
-      with:
-        name: repo-name
-        path: /tmp/github_output
-
-    - name: Set repository name
-      id: repo-name
-      run: cat /tmp/github_output/REPO_NAME >> $GITHUB_OUTPUT
-
     - name: Setup pnpm
       uses: pnpm/action-setup@v3
       with:
@@ -141,13 +127,13 @@ jobs:
     - name: Update vite.config.ts
       working-directory: ./frontend
       run: |
-        sed -i.bak "s|base: '/full-stack-challenge/'|base: '/${{ steps.repo-name.outputs.REPO_NAME }}/'|g" vite.config.ts
+        sed -i.bak "s|base: '/full-stack-challenge/'|base: '/${{ needs.setup.outputs.repo_name }}/'|g" vite.config.ts
 
     - name: Build
       working-directory: ./frontend
       run: pnpm run build
       env:
-        BASE_URL: '/${{ steps.repo-name.outputs.REPO_NAME }}/'
+        BASE_URL: '/${{ needs.setup.outputs.repo_name }}/'
 
     - name: Create .nojekyll file
       run: touch frontend/dist/.nojekyll
