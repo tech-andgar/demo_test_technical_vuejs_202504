@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { KivaText } from '../atoms';
 import SectorFilter from './SectorFilter.vue';
 import CountryFilter from './CountryFilter.vue';
@@ -119,6 +119,25 @@ const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
 const isFilterOpen = (filterId: string): boolean => {
   return activeFilterId.value === filterId;
 };
+
+// Calcular un texto que explique los filtros actuales para mostrar al usuario
+const appliedFiltersText = computed(() => {
+  const filters = [];
+  
+  if (tempFilters.value.sectors.length > 0) {
+    filters.push(`${tempFilters.value.sectors.length} sectores`);
+  }
+  
+  if (tempFilters.value.countries.length > 0) {
+    filters.push(`${tempFilters.value.countries.length} países`);
+  }
+  
+  if (filters.length === 0) {
+    return "Sin filtros aplicados";
+  }
+  
+  return `Filtros aplicados: ${filters.join(' y ')}`;
+});
 </script>
 
 <template>
@@ -141,6 +160,17 @@ const isFilterOpen = (filterId: string): boolean => {
         >
           Clear All
         </button>
+      </div>
+      
+      <!-- Indicador de préstamos activos -->
+      <div class="active-loans-notice">
+        <small>Mostrando solo préstamos activos en recaudación. Los contadores pueden incluir préstamos de todos los estados.</small>
+      </div>
+      
+      <!-- Indicador de filtros aplicados -->
+      <div v-if="tempFilters.sectors.length > 0 || tempFilters.countries.length > 0" class="filters-summary">
+        <small>{{ appliedFiltersText }}</small>
+        <small class="filters-note">* El contador superior muestra los préstamos que cumplen con todos los filtros seleccionados, mientras que los números junto a cada país o sector indican el total disponible en esa categoría sin aplicar otros filtros. Por eso pueden ser diferentes.</small>
       </div>
       
       <!-- Mensajes de status -->
@@ -234,6 +264,33 @@ const isFilterOpen = (filterId: string): boolean => {
   justify-content: center;
   padding: 1rem 0;
   color: #6b7280;
+}
+
+.filters-summary {
+  margin: 0.5rem 0 1rem;
+  padding: 0.5rem;
+  background-color: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 0.375rem;
+  text-align: center;
+}
+
+.filters-note {
+  display: block;
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.active-loans-notice {
+  margin: 0 0 1rem;
+  padding: 0.5rem;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.375rem;
+  text-align: center;
+  color: #3b82f6;
+  font-style: italic;
 }
 
 /* Responsive */

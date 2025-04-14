@@ -137,6 +137,9 @@ const toggleDropdown = (open?: boolean) => {
       </div>
       
       <div v-else class="item-list">
+        <div class="filter-info" v-if="props.showCount">
+          <small class="info-text">Los números indican el total de préstamos disponibles en cada categoría (incluyendo todos los estados), sin aplicar otros filtros</small>
+        </div>
         <div 
           v-for="item in props.items" 
           :key="item.id"
@@ -148,7 +151,10 @@ const toggleDropdown = (open?: boolean) => {
             <span v-if="isSelected(item.id)" class="checkmark">✓</span>
           </div>
           <span class="item-name">{{ item.name }}</span>
-          <span v-if="props.showCount && item.count" class="item-count">
+          <span v-if="props.showCount && item.count" 
+                class="item-count" 
+                :class="{ 'muted-count': !isSelected(item.id) }" 
+                :title="`Total de préstamos en ${item.name} (sin otros filtros)`">
             ({{ item.count }})
           </span>
         </div>
@@ -214,6 +220,18 @@ const toggleDropdown = (open?: boolean) => {
   color: #6b7280;
 }
 
+.filter-info {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-text {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
 .item-list {
   max-height: 220px;
   overflow-y: auto;
@@ -266,6 +284,11 @@ const toggleDropdown = (open?: boolean) => {
   font-size: 0.75rem;
   color: #6b7280;
   margin-left: 0.5rem;
+}
+
+.muted-count {
+  color: #9ca3af;
+  font-style: italic;
 }
 
 .filter-actions {

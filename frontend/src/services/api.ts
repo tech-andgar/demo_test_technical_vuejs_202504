@@ -28,45 +28,14 @@ export const fetchLoans = async (
     // Convertir los filtros a la estructura esperada por la API
     const filterVariables = generateFilterVariables(filters);
     
-    const query = `
-      query GetLoans($limit: Int!, $offset: Int!, $countries: [String!], $sectors: [Int!]) {
-        lend {
-          loans(limit: $limit, offset: $offset, filters: { country: $countries, sector: $sectors }) {
-            values {
-              id
-              name
-              description
-              loanAmount
-              loanFundraisingInfo {
-                fundedAmount
-              }
-              sector {
-                name
-                id
-              }
-              geocode {
-                country {
-                  name
-                  isoCode
-                }
-              }
-              image {
-                url
-              }
-            }
-            totalCount
-          }
-        }
-      }
-    `;
-
+    // Usar la consulta importada en lugar de definirla directamente
     const variables = {
       limit,
       offset,
       ...filterVariables
     };
 
-    const response = await fetchGraphQL<KivaGraphQLResponse>(query, variables);
+    const response = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_QUERY, variables);
     
     if (!response?.lend?.loans?.values) {
       throw new Error('Invalid response format from API');

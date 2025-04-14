@@ -5,7 +5,7 @@
 export const GET_LOANS_QUERY = `
   query GetLoans($limit: Int!, $offset: Int!, $countries: [String!], $sectors: [Int!]) {
     lend {
-      loans(limit: $limit, offset: $offset, filters: { country: $countries, sector: $sectors }) {
+      loans(limit: $limit, offset: $offset, filters: { country: $countries, sector: $sectors, status: fundraising }) {
         totalCount
         values {
           id
@@ -44,7 +44,7 @@ export const GET_LOANS_QUERY = `
 export const GET_LOANS_BY_SECTOR_QUERY = `
   query GetLoansBySector($limit: Int!, $offset: Int!, $sectors: [Int!]!, $countries: [String!]) {
     lend {
-      loans(limit: $limit, offset: $offset, filters: { sector: $sectors, country: $countries }) {
+      loans(limit: $limit, offset: $offset, filters: { sector: $sectors, country: $countries, status: fundraising }) {
         totalCount
         values {
           id
@@ -129,7 +129,7 @@ export const GET_FILTER_OPTIONS_QUERY = `
         }
         count
       }
-      loans(limit: 1000) {
+      loans(limit: 1000, filters: { status: fundraising }) {
         values {
           sector {
             id
