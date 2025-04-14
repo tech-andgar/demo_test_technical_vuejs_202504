@@ -3,25 +3,25 @@ import BaseFilter from './BaseFilter.vue';
 import { useLoan } from '@/composables/useLoan';
 
 /**
- * Componente para filtrar préstamos por sector
+ * Component for filtering loans by sector
  * 
- * Utiliza el componente base genérico BaseFilter para mostrar
- * una lista desplegable de sectores disponibles
+ * Uses the generic base component BaseFilter to display
+ * a dropdown list of available sectors
  */
 
 // Props
 interface Props {
-  /** Mostrar el contador de préstamos junto al nombre del sector */
+  /** Show the loan counter next to the sector name */
   showCount?: boolean;
-  /** Lista de sectores preseleccionados por ID */
+  /** List of preselected sectors by ID */
   selectedSectors?: number[];
-  /** Texto a mostrar cuando no hay sectores seleccionados */
+  /** Text to display when no sectors are selected */
   placeholder?: string;
-  /** Si el componente está deshabilitado */
+  /** If the component is disabled */
   disabled?: boolean;
-  /** Identificador único para el filtro */
+  /** Unique identifier for the filter */
   filterId?: string;
-  /** Si el dropdown está abierto (controlado externamente) */
+  /** If the dropdown is open (externally controlled) */
   isDropdownOpen?: boolean;
 }
 
@@ -36,15 +36,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  /** Emitido cuando cambia la selección de sectores */
+  /** Emitted when the sector selection changes */
   (e: 'update:selectedSectors', sectors: number[]): void;
-  /** Emitido cuando se aplica el filtro */
+  /** Emitted when the filter is applied */
   (e: 'filter', sectors: number[]): void;
-  /** Emitido cuando se cambia el estado del dropdown */
+  /** Emitted when the dropdown state changes */
   (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
-// Composable para acceder a la funcionalidad de préstamos
+// Composable to access loan functionality
 const { availableSectors, loadFilterOptions, loadingFilters } = useLoan();
 
 // Función para transformar datos de sector al formato del filtro base
@@ -65,7 +65,7 @@ const handleApplyFilter = (selection: any[]) => {
   emit('filter', selection);
 };
 
-// Manejar el evento de toggle del dropdown
+// Handle dropdown toggle event
 const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
   emit('toggle-dropdown', isOpen, filterId);
 };

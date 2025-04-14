@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLoan } from '../useLoan';
-import { fetchLoans, fetchLoanById } from '@/services/api';
+import { fetchLoans, fetchLoanById, fetchFilterOptions } from '@/services/api';
 import { Loan } from '@/models/Loan';
 import { APIError } from '@/services/errors/apiErrors';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
-  fetchLoanById: vi.fn()
+  fetchLoanById: vi.fn(),
+  fetchFilterOptions: vi.fn()
 }));
 
 describe('useLoan', () => {
@@ -26,14 +27,19 @@ describe('useLoan', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock the fetchFilterOptions function to avoid unhandled rejections
+    vi.mocked(fetchFilterOptions).mockResolvedValue({
+      sectors: [],
+      countries: []
+    });
   });
 
   describe('loadLoans', () => {
     it('should handle API errors', async () => {
       vi.mocked(fetchLoans).mockRejectedValueOnce(new APIError('Test error'));
-      const { loadLoans, error } = useLoan();
-      await loadLoans(1);
-      expect(error.value).toBeInstanceOf(Error);
+      const { loadLoans } = useLoan();
+      
+      await expect(loadLoans(1)).rejects.toThrow('Test error');
     });
 
     it('should handle successful loan fetch', async () => {
@@ -42,16 +48,17 @@ describe('useLoan', () => {
         loans: mockLoans,
         total: 1
       });
-      const { loadLoans, loans } = useLoan();
+      const { loadLoans, loans, totalCount } = useLoan();
       await loadLoans(1);
       expect(loans.value).toEqual(mockLoans);
+      expect(totalCount.value).toBe(1);
     });
 
     it('should handle network errors', async () => {
       vi.mocked(fetchLoans).mockRejectedValueOnce(new Error('Network error'));
-      const { loadLoans, error } = useLoan();
-      await loadLoans(1);
-      expect(error.value).toBeInstanceOf(Error);
+      const { loadLoans } = useLoan();
+      
+      await expect(loadLoans(1)).rejects.toThrow('Network error');
     });
   });
 });

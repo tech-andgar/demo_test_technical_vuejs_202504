@@ -111,9 +111,10 @@ export const useLoan = () => {
       availableCountries.value = options.countries;
       availableSectors.value = options.sectors;
     } catch (err) {
-      handleError(err);
-    } finally {
+      console.error('Error loading filter options:', err);
       loadingFilters.value = false;
+      const errorMessage = err instanceof Error ? err.message : 'Error loading loans';
+      throw new Error(errorMessage);
     }
   };
 
@@ -141,12 +142,10 @@ export const useLoan = () => {
       totalCount.value = total;
       return fetchedLoans as Loan[];
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los préstamos';
-      error.value = new Error(errorMessage);
       console.error('Error loading loans:', err);
-      return [];
-    } finally {
       loadingLoans.value = false;
+      const errorMessage = err instanceof Error ? err.message : 'Error loading loans';
+      throw new Error(errorMessage);
     }
   };
 
@@ -165,11 +164,10 @@ export const useLoan = () => {
       totalCount.value = total;
       currentPage.value = page;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los préstamos';
-      error.value = new Error(errorMessage);
       console.error('Error loading loans:', err);
-    } finally {
       loadingLoans.value = false;
+      const errorMessage = err instanceof Error ? err.message : 'Error loading loans';
+      throw new Error(errorMessage);
     }
   };
 

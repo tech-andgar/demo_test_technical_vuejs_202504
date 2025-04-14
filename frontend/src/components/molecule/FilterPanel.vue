@@ -7,18 +7,18 @@ import type { LoanFilters } from '@/models/filters';
 import { useLoan } from '@/composables/useLoan';
 
 /**
- * Panel de filtros para préstamos
+ * Filter panel for loans
  * 
- * Contiene todos los filtros disponibles y permite aplicarlos a la lista de préstamos
+ * Contains all available filters and allows applying them to the loans list
  */
 
 // Props
 interface Props {
-  /** Filtros actuales aplicados */
+  /** Currently applied filters */
   filters?: LoanFilters;
-  /** Título del panel de filtros */
+  /** Filter panel title */
   title?: string;
-  /** Contador de préstamos activos por país */
+  /** Counter of active loans by country */
   activeLoanCounts?: Record<string, number>;
 }
 
@@ -30,9 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  /** Emitido cuando se aplican nuevos filtros */
+  /** Emitted when new filters are applied */
   (e: 'update:filters', filters: LoanFilters): void;
-  /** Emitido cuando se aplican filtros */
+  /** Emitted when filters are applied */
   (e: 'filter', filters: LoanFilters): void;
 }>();
 
@@ -66,12 +66,12 @@ onMounted(() => {
   loadFilterOptions();
 });
 
-// Actualiza la selección temporal de sectores
+// Update temporary sector selection
 const handleSectorSelection = (sectors: number[]) => {
   tempFilters.value.sectors = sectors;
 };
 
-// Actualiza la selección temporal de países
+// Update temporary country selection
 const handleCountrySelection = (countries: string[]) => {
   tempFilters.value.countries = countries;
 };
@@ -120,37 +120,37 @@ const isFilterOpen = (filterId: string): boolean => {
   return activeFilterId.value === filterId;
 };
 
-// Calcular un texto que explique los filtros actuales para mostrar al usuario
+// Calculate a text that explains the current filters to show to the user
 const appliedFiltersText = computed(() => {
   const filters = [];
   
   if (tempFilters.value.sectors.length > 0) {
-    filters.push(`${tempFilters.value.sectors.length} sectores`);
+    filters.push(`${tempFilters.value.sectors.length} sectors`);
   }
   
   if (tempFilters.value.countries.length > 0) {
-    filters.push(`${tempFilters.value.countries.length} países`);
+    filters.push(`${tempFilters.value.countries.length} countries`);
   }
   
   if (filters.length === 0) {
-    return "Sin filtros aplicados";
+    return "No filters applied";
   }
   
-  return `Filtros aplicados: ${filters.join(' y ')}`;
+  return `Applied filters: ${filters.join(' and ')}`;
 });
 </script>
 
 <template>
   <div class="filter-panel">
-    <!-- Cabecera móvil -->
+    <!-- Mobile header -->
     <div class="filter-header-mobile" @click="toggleFilterPanel">
       <KivaText variant="h4" size="lg">{{ title }}</KivaText>
       <span class="toggle-icon">{{ isPanelOpen ? '▲' : '▼' }}</span>
     </div>
     
-    <!-- Contenido del panel (visible siempre en escritorio, condicional en móvil) -->
+    <!-- Panel content (always visible on desktop, conditional on mobile) -->
     <div class="filter-content" :class="{ 'is-open': isPanelOpen }">
-      <!-- Cabecera escritorio -->
+      <!-- Desktop header -->
       <div class="filter-header-desktop">
         <KivaText variant="h4" size="lg">{{ title }}</KivaText>
         <button 
@@ -162,23 +162,23 @@ const appliedFiltersText = computed(() => {
         </button>
       </div>
       
-      <!-- Indicador de préstamos activos -->
+      <!-- Active loans indicator -->
       <div class="active-loans-notice">
-        <small>Mostrando solo préstamos activos en recaudación. Los contadores pueden incluir préstamos de todos los estados.</small>
+        <small>Showing only active loans in fundraising. Counters may include loans in all statuses.</small>
       </div>
       
-      <!-- Indicador de filtros aplicados -->
+      <!-- Applied filters indicator -->
       <div v-if="tempFilters.sectors.length > 0 || tempFilters.countries.length > 0" class="filters-summary">
         <small>{{ appliedFiltersText }}</small>
-        <small class="filters-note">* El contador superior muestra los préstamos que cumplen con todos los filtros seleccionados, mientras que los números junto a cada país o sector indican el total disponible en esa categoría sin aplicar otros filtros. Por eso pueden ser diferentes.</small>
+        <small class="filters-note">* The top counter shows loans that meet all selected filters, while the numbers next to each country or sector indicate the total available in that category without applying other filters. That's why they may be different.</small>
       </div>
       
-      <!-- Mensajes de status -->
+      <!-- Status messages -->
       <div v-if="loadingFilters" class="filter-status">
         <KivaText size="sm">Loading filter options...</KivaText>
       </div>
       
-      <!-- Secciones de filtros -->
+      <!-- Filter sections -->
       <div class="filter-section">
         <SectorFilter
           :selected-sectors="tempFilters.sectors"
@@ -191,14 +191,14 @@ const appliedFiltersText = computed(() => {
         />
       </div>
       
-      <!-- Filtro de países -->
+      <!-- Country filter -->
       <div class="filter-section">
         <CountryFilter
           :selected-countries="tempFilters.countries"
           @update:selected-countries="handleCountrySelection"
           @filter="applyFilters"
           @toggle-dropdown="handleToggleDropdown"
-          placeholder="País"
+          placeholder="Country"
           filter-id="country"
           :is-dropdown-open="isFilterOpen('country')"
           :active-loan-counts="activeLoanCounts"

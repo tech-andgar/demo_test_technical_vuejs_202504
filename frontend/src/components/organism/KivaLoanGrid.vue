@@ -20,13 +20,13 @@ import { useLoan } from '@/composables/useLoan';
 
 // Props
 interface Props {
-  /** Si es true, se muestra el título por defecto */
+  /** If true, the default title is shown */
   title?: string;
-  /** Número de préstamos por página */
+  /** Number of loans per page */
   perPage?: number;
-  /** Si es true, se muestra el filtro */
+  /** If true, the filter is shown */
   showFilter?: boolean;
-  /** Filtros iniciales */
+  /** Initial filters */
   initialFilters?: LoanFilters;
 }
 
@@ -37,12 +37,12 @@ const props = withDefaults(defineProps<Props>(), {
   initialFilters: () => ({}),
 });
 
-// Estado
+// State
 const filters = ref<LoanFilters>(props.initialFilters || {});
 const currentPage = ref(1);
 const isLoading = ref(true);
 
-// Composable de préstamos
+// Loan composable
 const { 
   loans, 
   totalCount, 
@@ -55,38 +55,38 @@ const {
   updateFilters
 } = useLoan();
 
-// Cargar datos al montar el componente
+// Load data when the component is mounted
 onMounted(async () => {
   isLoading.value = true;
   
-  // Cargar opciones de filtros (sectores)
+  // Load filter options (sectors)
   await loadFilterOptions();
   
-  // Cargar préstamos
+  // Load loans
   await loadLoans(1);
   
   isLoading.value = false;
 });
 
-// Observar cambios en los filtros para recargar los préstamos
+// Watch for changes in filters to reload loans
 watchEffect(async () => {
-  // Siempre recargar los préstamos cuando cambian los filtros (incluido cuando están vacíos)
-  console.log('Filtrando préstamos con:', filters.value);
+  // Always reload loans when filters change (including when they are empty)
+  console.log('Filtering loans with:', filters.value);
   isLoading.value = true;
-  currentPage.value = 1; // Resetear a la primera página
+  currentPage.value = 1; // Reset to the first page
   
-  // Actualizar los filtros en el composable
+  // Update filters in the composable
   await updateFilters(filters.value);
   
   isLoading.value = false;
 });
 
-// Computar índices de préstamos para la página actual
+// Calculate paginated loan indices for current page
 const paginatedLoans = computed(() => {
   return loans.value;
 });
 
-// Computar número total de páginas
+// Calculate total number of pages
 const totalPages = computed(() => {
   return Math.ceil(totalCount.value / props.perPage);
 });
@@ -103,29 +103,29 @@ const changePage = async (newPage: number) => {
   isLoading.value = false;
 };
 
-// Aplicar filtros
+// Apply filters
 const applyFilters = async (newFilters: LoanFilters) => {
-  console.log('Aplicando filtros:', newFilters);
+  console.log('Applying filters:', newFilters);
   
-  // Actualizar los filtros locales
+  // Update local filters
   filters.value = { ...newFilters };
   
-  // Establecer loading state
+  // Set loading state
   isLoading.value = true;
   
-  // Resetear a la primera página cuando cambian los filtros
+  // Reset to first page when filters change
   currentPage.value = 1;
   
-  // Actualizar los filtros en el composable
+  // Update filters in composable
   await updateFilters(filters.value);
   
-  // Finalizar loading state
+  // End loading state
   isLoading.value = false;
   
-  console.log('Préstamos filtrados cargados:', filters.value);
+  console.log('Filtered loans loaded:', filters.value);
 };
 
-// Calcular contadores de préstamos activos por país
+// Calculate active loan counts by country
 const activeLoanCounts = computed(() => {
   const counts: Record<string, number> = {};
   loans.value.forEach(loan => {
@@ -148,7 +148,7 @@ const activeLoanCounts = computed(() => {
     </div>
     
     <div class="kiva-loan-grid__content">
-      <!-- Panel de filtros (opcional) -->
+      <!-- Filter panel (optional) -->
       <div v-if="showFilter" class="kiva-loan-grid__filters">
         <FilterPanel
           v-model:filters="filters"
@@ -157,20 +157,20 @@ const activeLoanCounts = computed(() => {
         />
       </div>
       
-      <!-- Grid de préstamos -->
+      <!-- Loan grid -->
       <div class="kiva-loan-grid__cards">
         <!-- Loader -->
         <div v-if="isLoading" class="kiva-loan-grid__loading">
           <KivaSpinner size="lg" />
         </div>
         
-        <!-- Sin resultados -->
+        <!-- No results -->
         <div v-else-if="loans.length === 0" class="kiva-loan-grid__empty">
           <KivaText size="lg">No loans found</KivaText>
           <KivaText v-if="Object.keys(filters).length > 0" size="md">Try adjusting your filters</KivaText>
         </div>
         
-        <!-- Lista de préstamos -->
+        <!-- Loan list -->
         <template v-else>
           <div class="kiva-loan-grid__grid">
             <KivaLoanCard

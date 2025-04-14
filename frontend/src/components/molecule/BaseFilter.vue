@@ -3,10 +3,10 @@ import { ref, onMounted, watch } from 'vue';
 import { KivaText } from '../atoms';
 
 /**
- * Componente base para filtros de tipo dropdown con checkboxes
+ * Base component for dropdown filters with checkboxes
  * 
- * Se usa como base para los filtros específicos como SectorFilter y CountryFilter
- * Proporciona la interfaz de usuario básica y comportamiento común
+ * Used as a base for specific filters like SectorFilter and CountryFilter
+ * Provides the basic user interface and common behavior
  */
 
 // Props
@@ -17,29 +17,29 @@ interface BaseFilterItem {
 }
 
 interface Props {
-  /** Lista de elementos a mostrar */
+  /** List of items to display */
   items: BaseFilterItem[];
-  /** Lista de elementos seleccionados por ID */
+  /** List of selected items by ID */
   selectedItems?: (number | string)[];
-  /** Mostrar el contador junto al nombre del elemento */
+  /** Show the counter next to the item name */
   showCount?: boolean;
-  /** Texto a mostrar cuando no hay elementos seleccionados */
+  /** Text to display when no items are selected */
   placeholder?: string;
-  /** Si el componente está deshabilitado */
+  /** If the component is disabled */
   disabled?: boolean;
-  /** Si está cargando la lista de elementos */
+  /** If the list of items is loading */
   loading?: boolean;
-  /** Mensaje a mostrar cuando no hay elementos disponibles */
+  /** Message to display when no items are available */
   emptyMessage?: string;
-  /** Mensaje a mostrar cuando está cargando */
+  /** Message to display when loading */
   loadingMessage?: string;
-  /** Texto para el botón aplicar */
+  /** Text for the apply button */
   applyText?: string;
-  /** Texto para el botón limpiar */
+  /** Text for the clear button */
   clearText?: string;
-  /** Identificador único para el filtro */
+  /** Unique identifier for the filter */
   filterId?: string;
-  /** Si el dropdown está abierto (controlado desde el exterior) */
+  /** If the dropdown is open (controlled from outside) */
   isDropdownOpen?: boolean;
 }
 
@@ -59,24 +59,24 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  /** Emitido cuando cambia la selección de elementos */
+  /** Emitted when the item selection changes */
   (e: 'update:selection', selection: (number | string)[]): void;
-  /** Emitido cuando se aplica el filtro */
+  /** Emitted when the filter is applied */
   (e: 'apply', selection: (number | string)[]): void;
-  /** Emitido cuando se cambia el estado del dropdown */
+  /** Emitted when the dropdown state changes */
   (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
-// Estado local
+// Local state
 const selectedOptions = ref<(number | string)[]>(props.selectedItems || []);
 const isOpen = ref(props.isDropdownOpen);
 
-// Sincronizar el estado isOpen con la prop isDropdownOpen
+// Synchronize isOpen state with isDropdownOpen prop
 watch(() => props.isDropdownOpen, (newVal) => {
   isOpen.value = newVal;
 });
 
-// Gestiona la selección/deselección de un elemento
+// Handles item selection/deselection
 const toggleItem = (itemId: number | string) => {
   if (selectedOptions.value.includes(itemId)) {
     selectedOptions.value = selectedOptions.value.filter(id => id !== itemId);
@@ -85,14 +85,14 @@ const toggleItem = (itemId: number | string) => {
   }
 };
 
-// Aplica el filtro actual
+// Applies the current filter
 const applyFilter = () => {
   emit('update:selection', selectedOptions.value);
   emit('apply', selectedOptions.value);
   toggleDropdown(false);
 };
 
-// Limpia todos los filtros
+// Clears all filters
 const clearFilter = () => {
   selectedOptions.value = [];
   emit('update:selection', []);
@@ -100,12 +100,12 @@ const clearFilter = () => {
   toggleDropdown(false);
 };
 
-// Determina si un elemento está seleccionado
+// Determines if an item is selected
 const isSelected = (itemId: number | string): boolean => {
   return selectedOptions.value.includes(itemId);
 };
 
-// Gestiona la apertura/cierre del dropdown
+// Handles dropdown opening/closing
 const toggleDropdown = (open?: boolean) => {
   const newState = open !== undefined ? open : !isOpen.value;
   isOpen.value = newState;
@@ -138,7 +138,7 @@ const toggleDropdown = (open?: boolean) => {
       
       <div v-else class="item-list">
         <div class="filter-info" v-if="props.showCount">
-          <small class="info-text">Los números indican el total de préstamos disponibles en cada categoría (incluyendo todos los estados), sin aplicar otros filtros</small>
+          <small class="info-text">Numbers indicate the total loans available in each category (including all statuses), without applying other filters</small>
         </div>
         <div 
           v-for="item in props.items" 
@@ -154,7 +154,7 @@ const toggleDropdown = (open?: boolean) => {
           <span v-if="props.showCount && item.count" 
                 class="item-count" 
                 :class="{ 'muted-count': !isSelected(item.id) }" 
-                :title="`Total de préstamos en ${item.name} (sin otros filtros)`">
+                :title="`Total loans in ${item.name} (without other filters)`">
             ({{ item.count }})
           </span>
         </div>

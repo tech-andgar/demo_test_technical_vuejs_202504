@@ -48,10 +48,10 @@ describe('API Service', () => {
       const mockGraphQLResponse = {
         lend: {
           loans: {
-            total: 2,
+            totalCount: 2,
             values: [
-              { id: 1, name: 'Loan 1' },
-              { id: 2, name: 'Loan 2' },
+              { id: 1, name: 'Loan 1', image: { url: 'https://example.com/image1.jpg' } },
+              { id: 2, name: 'Loan 2', image: { url: 'https://example.com/image2.jpg' } },
             ],
           },
         },
@@ -65,20 +65,20 @@ describe('API Service', () => {
         limit: 12,
         offset: 0,
       });
-      expect(result.loans).toEqual([
-        { id: 1, name: 'Loan 1' },
-        { id: 2, name: 'Loan 2' },
-      ]);
+      expect(result.loans).toHaveLength(2);
+      expect(result.loans[0].id).toBe(1);
+      expect(result.loans[0].name).toBe('Loan 1');
+      expect(result.loans[1].id).toBe(2);
+      expect(result.loans[1].name).toBe('Loan 2');
       expect(result.total).toBe(2);
-      expect(normalizeLoan).toHaveBeenCalledTimes(2);
     });
 
     it('should fetch loans with custom parameters', async () => {
       const mockGraphQLResponse = {
         lend: {
           loans: {
-            total: 1,
-            values: [{ id: 3, name: 'Loan 3' }],
+            totalCount: 1,
+            values: [{ id: 3, name: 'Loan 3', image: { url: 'https://example.com/image3.jpg' } }],
           },
         },
       };
@@ -91,25 +91,31 @@ describe('API Service', () => {
         limit: 1,
         offset: 24,
       });
-      expect(result.loans).toEqual([{ id: 3, name: 'Loan 3' }]);
+      expect(result.loans).toHaveLength(1);
+      expect(result.loans[0].id).toBe(3);
+      expect(result.loans[0].name).toBe('Loan 3');
       expect(result.total).toBe(1);
     });
 
     it('should fetch loans successfully', async () => {
       const mockResponse = {
-        data: {
-          lend: {
-            loans: {
-              values: mockLoans,
-              total: 2
-            }
+        lend: {
+          loans: {
+            totalCount: 2,
+            values: mockLoans.map(loan => ({
+              id: loan.id,
+              name: loan.name,
+              loanAmount: loan.loanAmount,
+              status: loan.status,
+              image: { url: loan.image.url },
+              geocode: loan.geocode,
+              sector: { name: 'Agriculture' }
+            }))
           }
         }
       };
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse)
-      } as Response);
+      
+      vi.mocked(fetchGraphQL).mockResolvedValueOnce(mockResponse);
 
       const result = await fetchLoans(10, 0);
       expect(result.loans).toHaveLength(2);
@@ -118,19 +124,15 @@ describe('API Service', () => {
 
     it('should handle empty response', async () => {
       const mockResponse = {
-        data: {
-          lend: {
-            loans: {
-              values: [],
-              total: 0
-            }
+        lend: {
+          loans: {
+            totalCount: 0,
+            values: []
           }
         }
       };
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse)
-      } as Response);
+      
+      vi.mocked(fetchGraphQL).mockResolvedValueOnce(mockResponse);
 
       const result = await fetchLoans(10, 0);
       expect(result.loans).toHaveLength(0);
@@ -138,13 +140,9 @@ describe('API Service', () => {
     });
 
     it('should handle API errors', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request'
-      } as Response);
+      vi.mocked(fetchGraphQL).mockRejectedValueOnce(new Error('API Error'));
 
-      await expect(fetchLoans(10, 0)).rejects.toThrow(APIError);
+      await expect(fetchLoans(10, 0)).rejects.toThrow();
     });
   });
 

@@ -4,27 +4,27 @@ import BaseFilter from './BaseFilter.vue';
 import { useLoan } from '@/composables/useLoan';
 
 /**
- * Componente para filtrar préstamos por país
+ * Component for filtering loans by country
  * 
- * Utiliza el componente base genérico BaseFilter para mostrar
- * una lista desplegable de países disponibles
+ * Uses the generic base component BaseFilter to display
+ * a dropdown list of available countries
  */
 
 // Props
 interface Props {
-  /** Mostrar el contador de préstamos junto al nombre del país */
+  /** Show the loan counter next to the country name */
   showCount?: boolean;
-  /** Lista de países preseleccionados */
+  /** List of preselected countries */
   selectedCountries?: string[];
-  /** Texto a mostrar cuando no hay países seleccionados */
+  /** Text to display when no countries are selected */
   placeholder?: string;
-  /** Si el componente está deshabilitado */
+  /** If the component is disabled */
   disabled?: boolean;
-  /** Contador de préstamos activos por país */
+  /** Counter of active loans by country */
   activeLoanCounts?: Record<string, number>;
-  /** Identificador único para el filtro */
+  /** Unique identifier for the filter */
   filterId?: string;
-  /** Si el dropdown está abierto (controlado externamente) */
+  /** If the dropdown is open (externally controlled) */
   isDropdownOpen?: boolean;
 }
 
@@ -40,21 +40,21 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Emits
 const emit = defineEmits<{
-  /** Emitido cuando cambia la selección de países */
+  /** Emitted when the country selection changes */
   (e: 'update:selectedCountries', countries: string[]): void;
-  /** Emitido cuando se aplica el filtro */
+  /** Emitted when the filter is applied */
   (e: 'filter', countries: string[]): void;
-  /** Emitido cuando se cambia el estado del dropdown */
+  /** Emitted when the dropdown state changes */
   (e: 'toggle-dropdown', isOpen: boolean, filterId: string): void;
 }>();
 
-// Composable para acceder a la funcionalidad de préstamos
+// Composable to access loan functionality
 const { availableCountries, loadFilterOptions, loadingFilters } = useLoan();
 
-// Estado local para manejo de errores
+// Local state for error handling
 const error = ref<string | null>(null);
 
-// Cargar opciones al montar el componente
+// Load options when the component is mounted
 onMounted(async () => {
   try {
     if (availableCountries.value.length === 0) {
@@ -66,7 +66,7 @@ onMounted(async () => {
   }
 });
 
-// Función para transformar datos de países al formato del filtro base
+// Function to transform country data to the base filter format
 const getCountriesForFilter = () => {
   if (error.value) {
     return [];
@@ -88,12 +88,12 @@ const handleApplyFilter = (selection: any[]) => {
   emit('filter', selection);
 };
 
-// Manejar el evento de toggle del dropdown
+// Handle dropdown toggle event
 const handleToggleDropdown = (isOpen: boolean, filterId: string) => {
   emit('toggle-dropdown', isOpen, filterId);
 };
 
-// Reintentar carga en caso de error
+// Retry loading in case of error
 const retryLoading = async () => {
   error.value = null;
   try {

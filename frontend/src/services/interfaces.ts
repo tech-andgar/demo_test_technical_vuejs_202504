@@ -38,7 +38,7 @@ export interface LoanListResponse {
 
 /**
  * Interface for filter options response
- * Simplificada para manejar datos básicos de países
+ * Simplified to handle basic country data
  */
 export interface FilterOptionsResponse {
   countries: Array<{ 
@@ -64,7 +64,7 @@ export interface GraphQLLoan {
   image: {
     url: string;
   };
-  // Estos campos los dejamos opcionales porque podrían no estar en la respuesta mínima
+  // These fields are optional because they might not be in the minimal response
   loanFundraisingInfo?: {
     fundedAmount: number | string;
   };

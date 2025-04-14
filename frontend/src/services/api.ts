@@ -25,10 +25,10 @@ export const fetchLoans = async (
   filters?: LoanFilters
 ): Promise<{ loans: Loan[], total: number }> => {
   try {
-    // Convertir los filtros a la estructura esperada por la API
+    // Convert filters to the structure expected by the API
     const filterVariables = generateFilterVariables(filters);
     
-    // Usar la consulta importada en lugar de definirla directamente
+    // Use the imported query instead of defining it directly
     const variables = {
       limit,
       offset,
@@ -74,7 +74,7 @@ export const fetchLoanById = async (id: number): Promise<Loan> => {
 
 /**
  * Fetch available filter options (countries and sectors) from the Kiva API
- * Implementación basada en pruebas reales con la API
+ * Implementation based on real tests with the API
  * 
  * @returns Object containing countries and sectors for filtering
  */
@@ -120,6 +120,6 @@ export const fetchFilterOptions = async (): Promise<FilterOptionsResponse> => {
     };
   } catch (error) {
     console.error('Error fetching filter options:', error);
-    throw error; // Propagar el error en lugar de devolver datos estáticos
+    throw error; // Propagate the error instead of returning static data
   }
 };
