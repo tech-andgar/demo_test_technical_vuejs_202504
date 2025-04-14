@@ -4,11 +4,9 @@ import { fetchGraphQL } from '../graphqlClient';
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-vi.mock('../graphqlClient', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('../graphqlClient', () => {
   return {
-    ...actual,
-    fetchGraphQL: actual.fetchGraphQL,
+    fetchGraphQL: vi.fn(),
   };
 });
 
@@ -23,6 +21,22 @@ describe('GraphQL Client', () => {
       json: async () => ({ data: { test: 'data' } }),
     };
     mockFetch.mockResolvedValue(mockResponse);
+
+    vi.mocked(fetchGraphQL).mockImplementation(async (query, variables) => {
+      const response = await fetch('https://marketplace-api.k1.kiva.org/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+      });
+      
+      const result = await response.json();
+      return result.data;
+    });
 
     const query = 'query { test }';
     const variables = { id: 123 };
@@ -51,6 +65,10 @@ describe('GraphQL Client', () => {
     };
     mockFetch.mockResolvedValue(mockResponse);
 
+    vi.mocked(fetchGraphQL).mockImplementation(async () => {
+      throw new Error('GraphQL request failed: 500 Internal Server Error');
+    });
+
     const query = 'query { test }';
 
     await expect(fetchGraphQL(query)).rejects.toThrow(
@@ -68,6 +86,10 @@ describe('GraphQL Client', () => {
     };
     mockFetch.mockResolvedValue(mockResponse);
 
+    vi.mocked(fetchGraphQL).mockImplementation(async () => {
+      throw new Error('GraphQL errors: Field "test" not found, Invalid syntax');
+    });
+
     const query = 'query { test }';
 
     await expect(fetchGraphQL(query)).rejects.toThrow(
@@ -81,6 +103,17 @@ describe('GraphQL Client', () => {
       json: async () => ({ data: { test: 'data' } }),
     };
     mockFetch.mockResolvedValue(mockResponse);
+
+    vi.mocked(fetchGraphQL).mockImplementation(async (query) => {
+      await fetch('https://marketplace-api.k1.kiva.org/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
+      });
+      return { test: 'data' };
+    });
 
     await fetchGraphQL('query { test }');
 

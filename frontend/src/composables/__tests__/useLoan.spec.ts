@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLoan } from '../useLoan';
 import { fetchLoans, fetchLoanById, NetworkError } from '@/services/api';
+import { Loan } from '@/models/Loan';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
@@ -17,6 +18,25 @@ vi.mock('vue-router', () => ({
   useRoute: vi.fn(() => ({ params: { id: '1' } })),
 }));
 
+// Mock for GraphQLLoan that can be used to create a Loan instance
+const createMockLoan = (overrides = {}) => {
+  const defaultLoan = {
+    id: 1,
+    name: 'John Doe',
+    loanAmount: 1000,
+    loanFundraisingInfo: { fundedAmount: 500 },
+    image: { url: 'https://example.com/image.jpg' },
+    whySpecial: 'Special reason',
+    description: undefined,
+    status: undefined,
+    borrowers: undefined,
+    geocode: { country: { name: 'Kenya' } },
+  };
+  
+  // Create a Loan instance from the mock data
+  return new Loan({ ...defaultLoan, ...overrides });
+};
+
 describe('useLoan', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,14 +52,14 @@ describe('useLoan', () => {
 
   it('should load loans successfully', async () => {
     const mockLoans = [
-      {
+      createMockLoan({
         id: 1,
         name: 'John Doe',
         loanAmount: 1000,
         loanFundraisingInfo: { fundedAmount: 500 },
         image: { url: 'https://example.com/image1.jpg' },
         whySpecial: 'Special reason 1',
-      },
+      }),
     ];
 
     vi.mocked(fetchLoans).mockResolvedValue({
@@ -63,14 +83,14 @@ describe('useLoan', () => {
 
   it('should handle pagination', async () => {
     const mockLoans = [
-      {
+      createMockLoan({
         id: 2,
         name: 'Jane Smith',
         loanAmount: 800,
         loanFundraisingInfo: { fundedAmount: 400 },
         image: { url: 'https://example.com/image2.jpg' },
         whySpecial: 'Special reason 2',
-      },
+      }),
     ];
 
     vi.mocked(fetchLoans).mockResolvedValue({

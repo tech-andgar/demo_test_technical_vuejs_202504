@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('vue', async (importOriginal) => {
-  const actual = await importOriginal();
+// Simplificamos el mock para evitar errores de tipo
+vi.mock('vue', () => {
   const mockApp = {
     use: vi.fn().mockReturnThis(),
     mount: vi.fn(),
   };
   return {
-    ...actual,
     createApp: vi.fn(() => mockApp),
   };
 });
