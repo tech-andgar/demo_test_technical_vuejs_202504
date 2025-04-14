@@ -10,7 +10,11 @@
     "test:unit": "vitest",
     "test:coverage": "vitest run --coverage",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build --force"
+    "type-check": "vue-tsc --build --force",
+    "format": "biome format --write ./src",
+    "format:check": "biome format ./src",
+    "lint": "biome lint ./src",
+    "check": "biome check ./src"
   },
   "dependencies": {
     "@kiva/kv-components": "^3.109.4",
@@ -19,6 +23,7 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.5.3",
     "@tsconfig/node20": "^20.1.5",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^20.17.30",
