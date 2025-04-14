@@ -9,9 +9,7 @@ export default defineConfig({
   plugins: [
     vue(),
   ],
-  base: process.env.NODE_ENV === 'production' && process.env.GITHUB_ACTIONS === 'true' 
-    ? '/full-stack-challenge/' 
-    : '/',
+  base: '/full-stack-challenge/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

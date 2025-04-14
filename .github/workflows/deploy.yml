@@ -85,6 +85,11 @@ jobs:
     - name: Build
       working-directory: ./frontend
       run: pnpm run build
+      env:
+        BASE_URL: '/full-stack-challenge/'
+
+    - name: Create .nojekyll file
+      run: touch frontend/dist/.nojekyll
 
     - name: Deploy to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
