@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+import { KivaText, KivaBadge, KivaProgressBar, KivaImage } from '../atoms';
+
 const props = defineProps<{
   id: number;
   name: string;
@@ -19,18 +21,7 @@ const emit = defineEmits<{
   (e: 'click'): void;
 }>();
 
-const imageError = ref(false);
-const imageLoading = ref(false);
 const selectedAmount = ref(25);
-
-function handleImageError() {
-  imageError.value = true;
-  imageLoading.value = false;
-}
-
-function handleImageLoad() {
-  imageLoading.value = false;
-}
 
 const handleClick = () => {
   emit('click');
@@ -66,44 +57,54 @@ const handleDropdownClick = (event: Event) => {
 <template>
   <div class="kiva-style-card" @click="handleClick" role="button" tabindex="0" @keydown.enter="handleClick">
     <div class="loan-image-container">
-      <div class="image-loading" v-if="imageLoading" aria-hidden="true">
-        <div class="loading-spinner" aria-hidden="true"></div>
-      </div>
-      <img v-if="!imageError && props.imageUrl" :src="props.imageUrl" :alt="props.name" class="loan-image"
-        @error="handleImageError" @load="handleImageLoad" :class="{ 'hidden': imageLoading }" loading="lazy" />
-      <div v-if="imageError || !props.imageUrl" class="loan-placeholder" role="img"
-        :aria-label="`${props.name} Placeholder for loan image`">
-        <span>{{ props.name.charAt(0) || 'L' }}</span>
-      </div>
+      <KivaImage 
+        :contentfulSrc="imageUrl" 
+        :alt="name" 
+        :ariaLabel="name" 
+        width="480"
+        height="300"
+        class="loan-image" 
+        loading="lazy"
+      />
 
       <!-- Location badge -->
-      <div v-if="props.location" class="location-badge">
-        <span class="location-icon">📍</span> {{ props.location }}
-      </div>
+      <KivaBadge v-if="location" class="location-badge" size="small">
+        <span class="location-icon">📍</span> {{ location }}
+      </KivaBadge>
     </div>
 
     <div class="loan-container">
       <!-- Loan purpose -->
-      <h3 class="loan-purpose">${{ props.loanAmount }} helps {{ props.name }} {{ props.whySpecial }}</h3>
+      <KivaText variant="h3" size="lg" weight="medium" class="loan-purpose">
+        ${{ loanAmount }} helps {{ name }} {{ whySpecial }}
+      </KivaText>
 
       <!-- Categories -->
-      <div class="categories" v-if="props.categories && props.categories.length > 0">
-        <span v-for="(category, index) in props.categories" :key="index" class="category-tag">
+      <div class="categories" v-if="categories && categories.length > 0">
+        <KivaBadge 
+          v-for="(category, index) in categories" 
+          :key="index" 
+          size="small" 
+          class="category-tag"
+        >
           {{ category }}
-        </span>
+        </KivaBadge>
       </div>
 
       <!-- Action row -->
       <div class="action-row">
         <div class="progress-column">
-          <div class="amount-to-go">${{ amountToGo }} to go</div>
-          <div class="loan-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"
-            :aria-valuenow="progressPercentage">
-            <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
+          <div class="amount-row">
+            <KivaText size="sm" class="amount-to-go">${{ amountToGo }} to go</KivaText>
           </div>
+          <KivaProgressBar 
+            :value="progressPercentage" 
+            :max="100" 
+            :ariaLabel="`Loan progress: ${Math.round(progressPercentage)}% funded`"
+          />
         </div>
 
-        <div class="action-column" @click.stop>
+        <div class="action-group" @click.stop>
           <div class="amount-selector">
             <select v-model="selectedAmount" class="amount-dropdown" @click="handleDropdownClick"
               @change="handleDropdownClick">
@@ -114,7 +115,12 @@ const handleDropdownClick = (event: Event) => {
             </select>
           </div>
 
-          <button class="lend-button" @click="handleLend">Lend</button>
+          <button 
+            class="lend-button"
+            @click="handleLend"
+          >
+            Lend
+          </button>
         </div>
       </div>
     </div>
@@ -123,18 +129,19 @@ const handleDropdownClick = (event: Event) => {
 
 <style scoped>
 .kiva-style-card {
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   height: 100%;
   background-color: white;
+  border: 1px solid #e5e7eb;
 }
 
 .kiva-style-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .loan-image-container {
@@ -146,36 +153,27 @@ const handleDropdownClick = (event: Event) => {
 .loan-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
 .location-badge {
   position: absolute;
   bottom: 12px;
   left: 12px;
-  background-color: white;
-  padding: 2px 8px;
-  border-radius: 100px;
-  font-size: 0.8rem;
-  font-weight: 500;
   display: flex;
   align-items: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.92);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
 }
 
 .location-icon {
   margin-right: 4px;
-}
-
-.loan-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #e0e0e0;
-  font-size: 2rem;
-  color: #666;
+  color: #ef4444;
+  font-size: 1rem;
 }
 
 .loan-container {
@@ -186,10 +184,8 @@ const handleDropdownClick = (event: Event) => {
 }
 
 .loan-purpose {
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin: 0 0 1.5rem 0;
-  color: #333;
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
   line-height: 1.4;
 }
 
@@ -200,109 +196,103 @@ const handleDropdownClick = (event: Event) => {
   margin-bottom: 1.5rem;
 }
 
-.category-tag {
-  background-color: #f5f5f5;
-  color: #666;
-  font-size: 0.8rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
 .action-row {
+  margin-top: auto;
   display: flex;
-  align-items: flex-start;
+  justify-content: space-between;
+  align-items: flex-end;
   gap: 1rem;
 }
 
 .progress-column {
   flex: 1;
-  min-width: 0;
 }
 
-.action-column {
+.amount-row {
   display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-}
-
-.amount-to-go {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #333;
+  align-items: center;
   margin-bottom: 0.25rem;
 }
 
-.loan-progress {
-  height: 8px;
-  background-color: #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
-  width: 100%;
+.amount-to-go {
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
-.progress-bar {
-  height: 100%;
-  background-color: #4faf9c;
+.action-group {
+  display: flex;
+  position: relative;
 }
 
 .amount-selector {
-  width: 80px;
+  position: relative;
+  width: 90px;
 }
 
 .amount-dropdown {
+  display: block;
   width: 100%;
-  padding: 0.75rem 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
-  font-size: 1rem;
+  padding: 0.5rem 0.5rem;
+  padding-right: 2rem;
+  font-size: 1.25rem;
+  border: 1px solid #d1d5db;
+  border-top-left-radius: 9999px;
+  border-bottom-left-radius: 9999px;
+  border-right: none;
+  appearance: none;
   background-color: white;
-  cursor: pointer;
-  height: 58px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.6rem center;
+  background-repeat: no-repeat;
+  background-size: 0.8em 0.8em;
+  height: 48px;
+  text-align: center;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+  color: #374151;
+}
+
+.amount-dropdown:focus {
+  outline: none;
+  border-color: #26b6a1;
+  box-shadow: 0 0 0 3px rgba(38, 182, 161, 0.2);
 }
 
 .lend-button {
-  padding: 1rem 2rem;
-  background-color: #4faf9c;
+  background-color: #4faf4e;
   color: white;
-  border: none;
-  border-radius: 0.25rem;
+  padding: 0.75rem 1.5rem;
+  height: 48px;
+  width: 120px;
   font-weight: 500;
-  font-size: 1.125rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 9999px;
+  border-bottom-right-radius: 9999px;
+  font-size: 1.1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-left: -1px;
+  z-index: 0;
+  border: none;
   cursor: pointer;
   transition: background-color 0.2s;
-  white-space: nowrap;
-  height: 58px;
-  min-width: 120px;
 }
 
 .lend-button:hover {
-  background-color: #3d9d8a;
+  background-color: #3f8c3e;
 }
 
-.loading-spinner {
-  width: 30px;
-  height: 30px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #4faf9c;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+:deep(.kv-progress-bar) {
+  height: 8px !important;
+  background-color: #e9e9e9 !important;
+  border-radius: 999px !important;
+  overflow: hidden;
 }
 
-@keyframes spin {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-.hidden {
-  display: none;
+:deep(.kv-progress-bar__inner) {
+  background-color: #4faf4e !important;
+  border-radius: 999px !important;
 }
 </style>

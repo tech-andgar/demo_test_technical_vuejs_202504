@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
+import { KivaButton, KivaLoadingSpinner, KivaText } from '../atoms';
 import ErrorMessage from '../molecule/ErrorMessage.vue';
 import { useLoan } from '@/composables/useLoan';
 
@@ -38,7 +40,7 @@ const handleLoanClick = (loanId: number) => {
   <div class="kiva-style-container">
     <!-- Loading state -->
     <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
+      <KivaLoadingSpinner />
     </div>
 
     <!-- Error state -->
@@ -52,7 +54,10 @@ const handleLoanClick = (loanId: number) => {
 
     <!-- Empty state -->
     <div v-else-if="loans.length === 0" class="no-loans-container">
-      <div class="no-loans-text">No loans found</div>
+      <KivaText variant="h3" size="xl" align="center">No loans found</KivaText>
+      <KivaButton variant="primary" class="mt-4" @click="() => loadLoans()">
+        Try again
+      </KivaButton>
     </div>
 
     <!-- Loan grid -->
@@ -129,25 +134,15 @@ const handleLoanClick = (loanId: number) => {
 .no-loans-container,
 .error-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 200px;
   width: 100%;
 }
 
-/* Loading spinner animation */
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #26b6a1;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.mt-4 {
+  margin-top: 1rem;
 }
 
 .kiva-style-grid-item {
