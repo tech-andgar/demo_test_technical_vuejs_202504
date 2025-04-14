@@ -9,7 +9,7 @@ import type { GraphQLLoan } from "../interfaces";
  * @throws Error if the loan is null or undefined
  */
 export const normalizeLoan = (loan: GraphQLLoan): Loan => {
-  if (!loan) throw new Error('Cannot normalize null or undefined loan');
+  if (!loan) {
 
   // Crear objeto con valores por defecto para campos que podrían faltar
   const normalizedLoan: GraphQLLoan = {
