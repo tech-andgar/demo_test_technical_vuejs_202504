@@ -188,7 +188,7 @@ export const useLoan = () => {
    * @param page - Page number to load
    */
   const goToPage = (page: number) => {
-    if (page < 1 || page > totalPages.value) return;
+    if (page < 1 || page > totalPages.value) {
     return loadLoans(page);
   };
 
