@@ -16,48 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v3
-      with:
-        version: 8
-
-    - name: Setup Node with pnpm cache
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'pnpm'
-        cache-dependency-path: frontend/pnpm-lock.yaml
-
-    - name: Cache test results
-      uses: actions/cache@v3
-      with:
-        path: |
-          frontend/coverage
-          frontend/node_modules/.vitest
-        key: ${{ runner.os }}-vitest-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
-        restore-keys: |
-          ${{ runner.os }}-vitest-
-
-    - name: Install Dependencies
-      working-directory: ./frontend
-      run: pnpm install
-
-    - name: Run Tests
-      working-directory: ./frontend
-      run: pnpm run test:unit
-
-    - name: Run Type Check
-      working-directory: ./frontend
-      run: pnpm run type-check
-
-  build:
-    needs: test
+  setup:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -79,6 +38,96 @@ jobs:
         cache: 'pnpm'
         cache-dependency-path: frontend/pnpm-lock.yaml
 
+    - name: Install Dependencies
+      working-directory: ./frontend
+      run: pnpm install
+
+    - name: Cache node_modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
+    - name: Upload repository name
+      uses: actions/upload-artifact@v3
+      with:
+        name: repo-name
+        path: ${{ github.output_path }}
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+
+    - name: Setup Node with pnpm cache
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Restore node_modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
+    - name: Cache test results
+      uses: actions/cache@v3
+      with:
+        path: |
+          frontend/coverage
+          frontend/node_modules/.vitest
+        key: ${{ runner.os }}-vitest-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
+        restore-keys: |
+          ${{ runner.os }}-vitest-
+
+    - name: Run Tests
+      working-directory: ./frontend
+      run: pnpm run test:unit
+
+    - name: Run Type Check
+      working-directory: ./frontend
+      run: pnpm run type-check
+
+  build:
+    needs: [ setup, test ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Download repository name
+      uses: actions/download-artifact@v3
+      with:
+        name: repo-name
+        path: /tmp/github_output
+
+    - name: Set repository name
+      id: repo-name
+      run: cat /tmp/github_output/REPO_NAME >> $GITHUB_OUTPUT
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 8
+
+    - name: Setup Node with pnpm cache
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Restore node_modules
+      uses: actions/cache@v3
+      with:
+        path: frontend/node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+
     - name: Cache build
       uses: actions/cache@v3
       with:
@@ -88,10 +137,6 @@ jobs:
         key: ${{ runner.os }}-vite-build-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.vue', 'frontend/**/*.js') }}
         restore-keys: |
           ${{ runner.os }}-vite-build-
-
-    - name: Install Dependencies
-      working-directory: ./frontend
-      run: pnpm install
 
     - name: Update vite.config.ts
       working-directory: ./frontend
