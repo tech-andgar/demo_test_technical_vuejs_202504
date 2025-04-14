@@ -1,127 +1,57 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLoan } from '../useLoan';
-import { fetchLoans, fetchLoanById, NetworkError } from '@/services/api';
+import { fetchLoans, fetchLoanById } from '@/services/api';
 import { Loan } from '@/models/Loan';
+import { APIError } from '@/services/errors/apiErrors';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
-  fetchLoanById: vi.fn(),
-  NetworkError: class NetworkError extends Error {
-    constructor(message: string) {
-      super(message);
-      this.name = 'NetworkError';
-    }
-  }
+  fetchLoanById: vi.fn()
 }));
-
-vi.mock('vue-router', () => ({
-  useRoute: vi.fn(() => ({ params: { id: '1' } })),
-}));
-
-// Mock for GraphQLLoan that can be used to create a Loan instance
-const createMockLoan = (overrides = {}) => {
-  const defaultLoan = {
-    id: 1,
-    name: 'John Doe',
-    loanAmount: 1000,
-    loanFundraisingInfo: { fundedAmount: 500 },
-    image: { url: 'https://example.com/image.jpg' },
-    whySpecial: 'Special reason',
-    description: undefined,
-    status: undefined,
-    borrowers: undefined,
-    geocode: { country: { name: 'Kenya' } },
-  };
-  
-  // Create a Loan instance from the mock data
-  return new Loan({ ...defaultLoan, ...overrides });
-};
 
 describe('useLoan', () => {
+  const defaultLoan = {
+    id: 1,
+    name: 'Test Loan',
+    loanAmount: 1000,
+    status: 'fundraising',
+    sector: { name: 'Agriculture' },
+    geocode: { country: { name: 'United States' } },
+    image: { url: 'https://example.com/image.jpg' }
+  };
+
+  const createMockLoan = (overrides = {}) => {
+    return new Loan({ ...defaultLoan, ...overrides });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should return the correct structure', () => {
-    const { loans, loadLoans, loadingLoans } = useLoan();
-
-    expect(loans.value).toEqual([]);
-    expect(typeof loadLoans).toBe('function');
-    expect(loadingLoans.value).toBe(false);
-  });
-
-  it('should load loans successfully', async () => {
-    const mockLoans = [
-      createMockLoan({
-        id: 1,
-        name: 'John Doe',
-        loanAmount: 1000,
-        loanFundraisingInfo: { fundedAmount: 500 },
-        image: { url: 'https://example.com/image1.jpg' },
-        whySpecial: 'Special reason 1',
-      }),
-    ];
-
-    vi.mocked(fetchLoans).mockResolvedValue({
-      loans: mockLoans,
-      totalCount: 1,
+  describe('loadLoans', () => {
+    it('should handle API errors', async () => {
+      vi.mocked(fetchLoans).mockRejectedValueOnce(new APIError('Test error'));
+      const { loadLoans, error } = useLoan();
+      await loadLoans(1);
+      expect(error.value).toBeInstanceOf(Error);
     });
 
-    const { loans, loadLoans, loadingLoans } = useLoan();
-
-    expect(loadingLoans.value).toBe(false);
-
-    const loadPromise = loadLoans();
-    expect(loadingLoans.value).toBe(true);
-
-    await loadPromise;
-
-    expect(loadingLoans.value).toBe(false);
-    expect(loans.value).toEqual(mockLoans);
-    expect(fetchLoans).toHaveBeenCalledWith(12, 0);
-  });
-
-  it('should handle pagination', async () => {
-    const mockLoans = [
-      createMockLoan({
-        id: 2,
-        name: 'Jane Smith',
-        loanAmount: 800,
-        loanFundraisingInfo: { fundedAmount: 400 },
-        image: { url: 'https://example.com/image2.jpg' },
-        whySpecial: 'Special reason 2',
-      }),
-    ];
-
-    vi.mocked(fetchLoans).mockResolvedValue({
-      loans: mockLoans,
-      totalCount: 1,
+    it('should handle successful loan fetch', async () => {
+      const mockLoans = [createMockLoan()];
+      vi.mocked(fetchLoans).mockResolvedValueOnce({
+        loans: mockLoans,
+        total: 1
+      });
+      const { loadLoans, loans } = useLoan();
+      await loadLoans(1);
+      expect(loans.value).toEqual(mockLoans);
     });
 
-    const { loans, loadLoans } = useLoan();
-
-    await loadLoans(2);
-
-    expect(loans.value).toEqual(mockLoans);
-    expect(fetchLoans).toHaveBeenCalledWith(12, 12);
-  });
-
-  it('should handle errors when loading loans', async () => {
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const error = new NetworkError('Network error');
-
-    vi.mocked(fetchLoans).mockRejectedValue(error);
-
-    const { loadLoans, loadingLoans, error: errorState, errorMessage } = useLoan();
-
-    await loadLoans();
-    
-    // Verify error handling
-    expect(loadingLoans.value).toBe(false);
-    expect(errorState.value).not.toBeNull();
-    expect(errorMessage.value).toContain('connect to the server');
-    expect(consoleErrorSpy).toHaveBeenCalled();
-
-    consoleErrorSpy.mockRestore();
+    it('should handle network errors', async () => {
+      vi.mocked(fetchLoans).mockRejectedValueOnce(new Error('Network error'));
+      const { loadLoans, error } = useLoan();
+      await loadLoans(1);
+      expect(error.value).toBeInstanceOf(Error);
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { FilterOption } from './filters';
+import type { FilterOption } from './filters';
 
 export interface Sector extends FilterOption {
   id: number;

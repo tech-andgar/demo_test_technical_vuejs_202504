@@ -9,7 +9,6 @@ import { APIError, NetworkError, DataFormatError } from '@/services/errors/apiEr
 import type { LoanFilters } from '@/models/filters';
 import type { Loan } from '@/models/Loan';
 import { KIVA_API_URL } from '../config';
-import type { Sector } from '@/models/sector';
 
 // Interfaces for filter options
 interface Country {
@@ -134,15 +133,17 @@ export const useLoan = () => {
     try {
       resetError();
       loadingLoans.value = true;
-      const { loans: fetchedLoans, totalCount: count } = await fetchLoans(
+      const { loans: fetchedLoans, total } = await fetchLoans(
         limit,
         offset,
         loanFilters || filters.value
       );
-      totalCount.value = count;
+      totalCount.value = total;
       return fetchedLoans as Loan[];
     } catch (err) {
-      handleError(err);
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los préstamos';
+      error.value = new Error(errorMessage);
+      console.error('Error loading loans:', err);
       return [];
     } finally {
       loadingLoans.value = false;
@@ -159,12 +160,13 @@ export const useLoan = () => {
       loadingLoans.value = true;
       error.value = null;
       const offset = (page - 1) * perPage.value;
-      const fetchedLoans = await getLoans(perPage.value, offset, filters.value);
+      const { loans: fetchedLoans, total } = await fetchLoans(perPage.value, offset, filters.value);
       loans.value = fetchedLoans;
-      totalCount.value = fetchedLoans.length;
+      totalCount.value = total;
       currentPage.value = page;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'Error al cargar los préstamos';
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar los préstamos';
+      error.value = new Error(errorMessage);
       console.error('Error loading loans:', err);
     } finally {
       loadingLoans.value = false;
