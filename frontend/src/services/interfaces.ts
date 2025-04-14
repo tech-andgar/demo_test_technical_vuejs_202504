@@ -1,3 +1,7 @@
+/**
+ * Raw loan data structure as returned from the GraphQL API
+ * Contains string number values that need to be converted
+ */
 export interface GraphQLLoan {
   id: number;
   name: string;
@@ -24,6 +28,10 @@ export interface GraphQLLoan {
   };
 }
 
+/**
+ * Normalized loan data structure for use in the application
+ * Contains properly typed numeric values
+ */
 export interface Loan {
   id: number;
   name: string;

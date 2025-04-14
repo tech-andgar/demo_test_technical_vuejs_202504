@@ -3,12 +3,32 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
 import { useLoan } from '@/composables/useLoan';
+
+/**
+ * Grid component for displaying Kiva loans
+ *
+ * This component:
+ * - Loads loan data using the useLoan composable
+ * - Displays loans in a responsive grid layout
+ * - Shows loading state when fetching data
+ * - Shows empty state when no loans are found
+ */
+
+// Get loan data and methods from the composable
 const { loans, loadLoans, loadingLoans: loading } = useLoan();
 
+/**
+ * Fetch loans on component mount
+ */
 onMounted(() => {
   loadLoans();
 });
 
+/**
+ * Handle click on a loan card
+ *
+ * @param loanId - ID of the clicked loan
+ */
 const handleLoanClick = (loanId: number) => {
   // router.push(`/loan/${loanId}`);
   alert(`Loan ${loanId} clicked`);
@@ -17,14 +37,17 @@ const handleLoanClick = (loanId: number) => {
 
 <template>
   <div class="kiva-style-container">
+    <!-- Loading state -->
     <div v-if="loading" class="loading-container">
       <div class="loading-spinner"></div>
     </div>
 
+    <!-- Empty state -->
     <div v-else-if="loans.length === 0" class="no-loans-container">
       <div class="no-loans-text">No loans found</div>
     </div>
 
+    <!-- Loan grid -->
     <div v-else class="kiva-style-grid">
       <div 
       v-for="loan in loans"
@@ -39,7 +62,7 @@ const handleLoanClick = (loanId: number) => {
         :imageUrl="loan.image.url"
         :whySpecial="loan.whySpecial"
         :location="loan.geocode?.country?.name || ''"
-        :categories="loan.themes || []"
+        :categories="[]"
         @click="handleLoanClick(loan.id)"
         />
 
@@ -49,12 +72,14 @@ const handleLoanClick = (loanId: number) => {
 </template>
 
 <style scoped>
+/* Main container styles */
 .kiva-style-container {
   width: 100%;
   padding: 0;
   max-width: 100vw;
 }
 
+/* Grid layout with responsive breakpoints */
 .kiva-style-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
@@ -63,6 +88,7 @@ const handleLoanClick = (loanId: number) => {
   width: 100%;
 }
 
+/* Responsive breakpoints for different screen sizes */
 @media (min-width: 480px) {
   .kiva-style-grid {
     grid-template-columns: repeat(1, 1fr);
@@ -88,6 +114,7 @@ const handleLoanClick = (loanId: number) => {
   }
 }
 
+/* Loading and empty state styles */
 .loading-container,
 .no-loans-container {
   display: flex;
@@ -97,6 +124,7 @@ const handleLoanClick = (loanId: number) => {
   width: 100%;
 }
 
+/* Loading spinner animation */
 .loading-spinner {
   width: 40px;
   height: 40px;
