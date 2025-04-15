@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
 import KivaLoanCard from '../molecule/KivaLoanCard.vue';
 
 describe('KivaLoanCard', () => {
@@ -38,7 +38,7 @@ describe('KivaLoanCard', () => {
     });
 
     expect(wrapper.text()).toContain('$500 to go');
-    
+
     expect(wrapper.html()).toContain('Lend');
   });
 

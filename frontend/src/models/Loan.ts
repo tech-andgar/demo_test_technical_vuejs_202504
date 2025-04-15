@@ -25,6 +25,7 @@ export class Loan {
   geocode?: {
     country: {
       name: string;
+      isoCode?: string;
     };
   };
   themes?: string[];
@@ -35,18 +36,18 @@ export class Loan {
   constructor(data: GraphQLLoan) {
     this.id = data.id;
     this.name = data.name;
-    this.loanAmount = Number(data.loanAmount);
+    this.loanAmount = Number(data.loanAmount) || 0;
     this.loanFundraisingInfo = {
-      fundedAmount: Number(data.loanFundraisingInfo.fundedAmount),
+      fundedAmount: Number(data.loanFundraisingInfo?.fundedAmount) || 0,
     };
     this.image = {
-      url: data.image.url,
+      url: data.image.url || '',
     };
-    this.whySpecial = data.whySpecial;
-    this.description = data.description;
-    this.status = data.status;
-    this.borrowers = data.borrowers;
-    this.geocode = data.geocode;
+    this.whySpecial = data.whySpecial || '';
+    this.description = data.description || '';
+    this.status = data.status || '';
+    this.borrowers = data.borrowers || [];
+    this.geocode = data.geocode || { country: { name: '' } };
     this.themes = [];
   }
 
@@ -104,11 +105,11 @@ export class Loan {
    * @param maxLength Maximum length of the returned string
    * @returns Shortened special description with ellipsis if needed
    */
-  getShortDescription(maxLength: number = 100): string {
+  getShortDescription(maxLength = 100): string {
     if (!this.whySpecial || this.whySpecial.length <= maxLength) {
       return this.whySpecial || '';
     }
 
-    return this.whySpecial.substring(0, maxLength - 3) + '...';
+    return `${this.whySpecial.substring(0, maxLength - 3)}...`;
   }
 }

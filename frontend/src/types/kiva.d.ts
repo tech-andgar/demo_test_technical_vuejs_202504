@@ -1,5 +1,5 @@
 declare module '@kiva/kv-components/vue' {
-  import { DefineComponent } from 'vue';
+  import type { DefineComponent } from 'vue';
 
   export const KvButton: DefineComponent<{
     variant?: string;

@@ -1,14 +1,18 @@
 // @ts-ignore
 import KvButton from '@kiva/kv-components/dist/components/KvButton.vue';
 // @ts-ignore
-import KvProgressBar from '@kiva/kv-components/dist/components/KvProgressBar.vue';
-// @ts-ignore
 import KvContentfulImg from '@kiva/kv-components/dist/components/KvContentfulImg.vue';
 // @ts-ignore
 import KvLoadingSpinner from '@kiva/kv-components/dist/components/KvLoadingSpinner.vue';
+// @ts-ignore
+import KvProgressBar from '@kiva/kv-components/dist/components/KvProgressBar.vue';
 
-import KivaText from './KivaText.vue';
 import KivaBadge from './KivaBadge.vue';
+import KivaSpinner from './KivaSpinner.vue';
+import KivaText from './KivaText.vue';
+
+// Importar desde molecule para mantener compatibilidad
+import KivaLoanCard from '../molecule/KivaLoanCard.vue';
 
 export {
   KvButton as KivaButton,
@@ -17,4 +21,6 @@ export {
   KvContentfulImg as KivaImage,
   KvLoadingSpinner as KivaLoadingSpinner,
   KivaText,
+  KivaLoanCard,
+  KivaSpinner,
 };

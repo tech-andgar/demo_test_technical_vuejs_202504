@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
 import App from '@/App.vue';
+import { mount } from '@vue/test-utils';
+import { describe, expect, it, vi } from 'vitest';
 vi.mock('vue-router', () => ({
   RouterLink: {
     name: 'RouterLink',

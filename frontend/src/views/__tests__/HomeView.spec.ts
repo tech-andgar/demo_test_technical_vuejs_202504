@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { describe, expect, it, vi } from 'vitest';
 import HomeView from '../HomeView.vue';
 
 vi.mock('@/components/organism/KivaLoanGrid.vue', () => ({

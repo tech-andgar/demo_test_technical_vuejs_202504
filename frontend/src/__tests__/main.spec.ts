@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Ahora incluimos defineComponent en el mock de Vue
 vi.mock('vue', async () => {
@@ -8,7 +8,7 @@ vi.mock('vue', async () => {
   };
   return {
     createApp: vi.fn(() => mockApp),
-    defineComponent: (component: Record<string, any>) => component,
+    defineComponent: (component: Record<string, unknown>) => component,
   };
 });
 

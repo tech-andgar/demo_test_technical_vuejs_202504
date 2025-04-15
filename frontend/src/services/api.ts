@@ -1,110 +1,53 @@
-import type { Loan } from '@/models/Loan';
+import type { LoanFilters } from '@/models/filters';
+import { generateFilterVariables } from '@/models/filters';
+import { Loan } from '../models/Loan';
+import { DataFormatError, NetworkError, handleApiError } from './errors/apiErrors';
+import {
+  GET_FILTER_OPTIONS_QUERY,
+  GET_LOANS_QUERY,
+  GET_LOAN_BY_ID_QUERY,
+} from './graphql/loanQueries';
 import { fetchGraphQL } from './graphqlClient';
+import type { FilterOptionsResponse, GraphQLLoan, KivaGraphQLResponse } from './interfaces';
 import { normalizeLoan } from './mapper/loan';
 
-export class APIError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-    public details?: any
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
-export class NetworkError extends APIError {
-  constructor(
-    message: string,
-    public originalError?: Error
-  ) {
-    super(message);
-    this.name = 'NetworkError';
-  }
-}
-
-export class DataFormatError extends APIError {
-  constructor(
-    message: string,
-    public data?: any
-  ) {
-    super(message);
-    this.name = 'DataFormatError';
-  }
-}
-
 /**
- * Helper function to handle API errors
- *
- * @param error - The error object to handle
- * @param context - The context in which the error occurred
- * @returns Never
- */
-const handleApiError = (error: unknown, context: string): never => {
-  if (error instanceof Error) {
-    if (
-      error.name === 'NetworkError' ||
-      error.name === 'APIError' ||
-      error.name === 'DataFormatError'
-    ) {
-      throw error;
-    }
-    throw new NetworkError(`Error in ${context}: ${error.message}`, error);
-  }
-  throw new APIError(`Unknown error in ${context}`);
-};
-
-/**
- * Fetches a paginated list of loans from the Kiva API
+ * Fetches a paginated and filtered list of loans from the Kiva API
  *
  * @param limit - Maximum number of loans to retrieve (default: 12)
  * @param offset - Number of loans to skip for pagination (default: 0)
+ * @param filters - Optional filters to apply to the query
  * @returns Object containing an array of normalized loan objects and the total count
  */
 export const fetchLoans = async (
-  limit: number = 12,
-  offset: number = 0
-): Promise<{ loans: Loan[]; totalCount: number }> => {
+  limit: number,
+  offset: number,
+  filters?: LoanFilters
+): Promise<{ loans: Loan[]; total: number }> => {
   try {
-    const query = `
-      query GetLoans($limit: Int!, $offset: Int!) {
-        lend {
-          loans(limit: $limit, offset: $offset) {
-            totalCount
-            values {
-              id
-              name
-              loanAmount
-              loanFundraisingInfo {
-                fundedAmount
-              }
-              image {
-                url(customSize: "w480h300")
-              }
-              whySpecial
-              geocode {
-                country {
-                  name
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
+    // Convert filters to the structure expected by the API
+    const filterVariables = generateFilterVariables(filters);
 
-    const data = await fetchGraphQL(query, { limit, offset });
+    // Use the imported query instead of defining it directly
+    const variables = {
+      limit,
+      offset,
+      ...filterVariables,
+    };
 
-    if (!data?.lend?.loans?.values) {
-      throw new DataFormatError('Invalid response format from API', data);
+    const response = await fetchGraphQL<KivaGraphQLResponse>(GET_LOANS_QUERY, variables);
+
+    if (!response?.lend?.loans?.values) {
+      throw new Error('Invalid response format from API');
     }
 
-    const loans = data.lend.loans.values.map(normalizeLoan);
-    const totalCount = data.lend.loans.totalCount || 0;
+    const loans = response.lend.loans.values.map((loan) => new Loan(loan));
+    const total = response.lend.loans.totalCount || 0;
 
-    return { loans, totalCount };
+    return { loans, total };
   } catch (error) {
-    return handleApiError(error, 'fetchLoans');
+    console.error('Error fetching loans:', error);
+    throw error;
   }
 };
 
@@ -117,37 +60,7 @@ export const fetchLoans = async (
  */
 export const fetchLoanById = async (id: number): Promise<Loan> => {
   try {
-    const query = `
-      query GetLoanById($id: Int!) {
-        lend {
-          loan(id: $id) {
-            id
-            name
-            loanAmount
-            loanFundraisingInfo {
-              fundedAmount
-            }
-            image {
-              url(customSize: "w480h300")
-            }
-            whySpecial
-            description
-            status
-            borrowers {
-              firstName
-              pictured
-            }
-            geocode {
-              country {
-                name
-              }
-            }
-          }
-        }
-      }
-    `;
-
-    const data = await fetchGraphQL(query, { id });
+    const data = await fetchGraphQL<KivaGraphQLResponse>(GET_LOAN_BY_ID_QUERY, { id });
 
     if (!data?.lend?.loan) {
       throw new DataFormatError('Loan not found or invalid response format', data);
@@ -156,5 +69,81 @@ export const fetchLoanById = async (id: number): Promise<Loan> => {
     return normalizeLoan(data.lend.loan);
   } catch (error) {
     return handleApiError(error, `fetchLoanById(${id})`);
+  }
+};
+
+/**
+ * Fetch available filter options (countries and sectors) from the Kiva API
+ * Implementation based on real tests with the API
+ *
+ * @returns Object containing countries and sectors for filtering
+ */
+export const fetchFilterOptions = async (): Promise<FilterOptionsResponse> => {
+  try {
+    const data = await fetchGraphQL<KivaGraphQLResponse>(GET_FILTER_OPTIONS_QUERY);
+
+    // Extract countries with count > 0 from response
+    const countries =
+      data?.lend?.countryFacets
+        ?.filter((country) => country.country?.name && country.count !== null && country.count > 0)
+        ?.map((country) => ({
+          name: country.country.name,
+          isoCode: country.country.isoCode,
+          count: country.count || 0,
+        }))
+        ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
+
+    // Extract unique sectors from loan values
+    const sectors =
+      data?.lend?.loans?.values
+        ?.map((loan) => loan.sector)
+        ?.filter(
+          (sector): sector is NonNullable<GraphQLLoan['sector']> =>
+            sector !== undefined && sector !== null
+        )
+        ?.filter((sector, index, self) => index === self.findIndex((s) => s.id === sector.id)) // Remove duplicates
+        ?.map((sector) => ({
+          name: sector.name,
+          id: sector.id,
+        }))
+        ?.sort((a, b) => a.name.localeCompare(b.name)) || [];
+
+    return {
+      countries,
+      sectors: sectors.length
+        ? sectors
+        : [
+            { name: 'Agriculture', id: 1 },
+            { name: 'Services', id: 4 },
+            { name: 'Clothing', id: 5 },
+            { name: 'Health', id: 6 },
+            { name: 'Retail', id: 7 },
+            { name: 'Housing', id: 10 },
+            { name: 'Food', id: 12 },
+            { name: 'Education', id: 15 },
+          ],
+    };
+  } catch (error) {
+    console.error('Error fetching filter options:', error);
+
+    // Proporcionar datos de respaldo en caso de error de red
+    if (error instanceof NetworkError) {
+      console.warn('Usando datos de respaldo debido a un error de red');
+      return {
+        countries: [],
+        sectors: [
+          { name: 'Agriculture', id: 1 },
+          { name: 'Services', id: 4 },
+          { name: 'Clothing', id: 5 },
+          { name: 'Health', id: 6 },
+          { name: 'Retail', id: 7 },
+          { name: 'Housing', id: 10 },
+          { name: 'Food', id: 12 },
+          { name: 'Education', id: 15 },
+        ],
+      };
+    }
+
+    throw error; // Propagar otros tipos de errores
   }
 };
