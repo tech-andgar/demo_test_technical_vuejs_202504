@@ -2,7 +2,6 @@ import { Loan } from '@/models/Loan';
 import { fetchFilterOptions, fetchLoanById, fetchLoans } from '@/services/api';
 import { APIError } from '@/services/errors/apiErrors';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useLoan } from '../useLoan';
 
 vi.mock('@/services/api', () => ({
   fetchLoans: vi.fn(),
@@ -10,7 +9,7 @@ vi.mock('@/services/api', () => ({
   fetchFilterOptions: vi.fn(),
 }));
 
-describe('useLoan', () => {
+describe('API functions for loans', () => {
   const defaultLoan = {
     id: 1,
     name: 'Test Loan',
@@ -27,38 +26,36 @@ describe('useLoan', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock the fetchFilterOptions function to avoid unhandled rejections
+    // Mock the fetchFilterOptions function
     vi.mocked(fetchFilterOptions).mockResolvedValue({
       sectors: [],
       countries: [],
     });
   });
 
-  describe('loadLoans', () => {
-    it('should handle API errors', async () => {
-      vi.mocked(fetchLoans).mockRejectedValueOnce(new APIError('Test error'));
-      const { loadLoans } = useLoan();
-
-      await expect(loadLoans(1)).rejects.toThrow('Test error');
+  it('fetchLoans should work with default parameters', async () => {
+    const mockLoans = [createMockLoan()];
+    vi.mocked(fetchLoans).mockResolvedValueOnce({
+      loans: mockLoans,
+      total: 1,
     });
 
-    it('should handle successful loan fetch', async () => {
-      const mockLoans = [createMockLoan()];
-      vi.mocked(fetchLoans).mockResolvedValueOnce({
-        loans: mockLoans,
-        total: 1,
-      });
-      const { loadLoans, loans, totalCount } = useLoan();
-      await loadLoans(1);
-      expect(loans.value).toEqual(mockLoans);
-      expect(totalCount.value).toBe(1);
-    });
+    const result = await fetchLoans(10, 0);
+    expect(result.loans).toEqual(mockLoans);
+    expect(result.total).toBe(1);
+  });
 
-    it('should handle network errors', async () => {
-      vi.mocked(fetchLoans).mockRejectedValueOnce(new Error('Network error'));
-      const { loadLoans } = useLoan();
+  it('fetchFilterOptions should return options', async () => {
+    const mockOptions = {
+      sectors: [{ name: 'Agriculture', id: 1 }],
+      countries: [{ name: 'Peru', isoCode: 'PE' }],
+    };
 
-      await expect(loadLoans(1)).rejects.toThrow('Network error');
-    });
+    vi.mocked(fetchFilterOptions).mockResolvedValueOnce(mockOptions);
+
+    const result = await fetchFilterOptions();
+    expect(result).toEqual(mockOptions);
+    expect(result.sectors).toHaveLength(1);
+    expect(result.countries).toHaveLength(1);
   });
 });

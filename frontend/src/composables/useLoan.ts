@@ -213,6 +213,8 @@ export const useLoan = () => {
    */
   const goToPage = (page: number) => {
     if (page < 1 || page > totalPages.value) {
+      return;
+    }
     return loadLoans(page);
   };
 
