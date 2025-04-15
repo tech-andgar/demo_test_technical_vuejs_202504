@@ -11,9 +11,6 @@ import KivaBadge from './KivaBadge.vue';
 import KivaSpinner from './KivaSpinner.vue';
 import KivaText from './KivaText.vue';
 
-// Importar desde molecule para mantener compatibilidad
-import KivaLoanCard from '../molecule/KivaLoanCard.vue';
-
 export {
   KvButton as KivaButton,
   KivaBadge,
@@ -21,6 +18,5 @@ export {
   KvContentfulImg as KivaImage,
   KvLoadingSpinner as KivaLoadingSpinner,
   KivaText,
-  KivaLoanCard,
   KivaSpinner,
 };
